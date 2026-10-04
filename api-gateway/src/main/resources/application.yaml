@@ -1,0 +1,197 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  # --- Seguridad: validación de JWT contra Keycloak ---
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8081/realms/tu-realm
+          # jwk-set-uri se resuelve automáticamente desde el issuer-uri,
+          # pero puedes fijarlo explícito si lo prefieres:
+          # jwk-set-uri: http://keycloak:8081/realms/tu-realm/protocol/openid-connect/certs
+
+  # --- Redis (para rate limiting reactivo) ---
+  data:
+    redis:
+      host: redis
+      port: 6379
+      # password: tu-password   # si aplica
+
+  # --- Spring Cloud api-gateway ---
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false   # actívalo solo si usas service discovery (Eureka/Consul)
+
+          # Filtros globales por defecto para todas las rutas
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+          # CORS global (ajusta a tu dominio del frontend React)
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:3000"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
+
+          routes:
+            # - id: user-service
+            #   uri: http://localhost:8082
+            #   predicates:
+            #     - Path=/api/users/**
+            #   filters:
+            #     - name: CircuitBreaker
+            #       args:
+            #         name: userCB
+            #         fallbackUri: forward:/fallback/users
+            #     - name: RequestRateLimiter
+            #       args:
+            #         redis-rate-limiter.replenishRate: 10
+            #         redis-rate-limiter.burstCapacity: 20
+            #         redis-rate-limiter.requestedTokens: 1
+
+            - id: cart-service
+              uri: http://localhost:8083
+              predicates:
+                - Path=/api/cart/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: cartCB
+                    fallbackUri: forward:/fallback/cart
+
+            - id: product-service
+              uri: http://localhost:8084
+              predicates:
+                - Path=/api/products/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: productCB
+                    fallbackUri: forward:/fallback/products
+
+            - id: search-service
+              uri: http://localhost:8085
+              predicates:
+                - Path=/api/search/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: searchCB
+                    fallbackUri: forward:/fallback/search
+
+            - id: inventory-service
+              uri: http://localhost:8086
+              predicates:
+                - Path=/api/inventory/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: inventoryCB
+                    fallbackUri: forward:/fallback/inventory
+
+            - id: order-service
+              uri: http://localhost:8087
+              predicates:
+                - Path=/api/orders/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: orderCB
+                    fallbackUri: forward:/fallback/orders
+
+            - id: payment-service
+              uri: http://localhost:8088
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: paymentCB
+                    fallbackUri: forward:/fallback/payments
+
+            - id: notification-service
+              uri: http://localhost:8089
+              predicates:
+                - Path=/api/notifications/**
+              filters:
+                - name: CircuitBreaker
+                  args:
+                    name: notificationCB
+                    fallbackUri: forward:/fallback/notifications
+
+            - id: import-export-service
+              uri: http://localhost:8090
+              predicates:
+                - Path=/api/imp-exp/**
+
+# --- Resilience4j: configuración de los Circuit Breakers ---
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 4s
+
+# --- Actuator: exposición de endpoints ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true   # enables /actuator/health/liveness and /readiness for k8s
+  health:
+    livenessstate: 
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  # --- Trazas con Zipkin ---
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0   # en producción baja esto (ej. 0.1)
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+    reactor.netty.http.client: DEBUG
