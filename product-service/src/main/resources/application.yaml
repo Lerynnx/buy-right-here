@@ -1,0 +1,83 @@
+server:
+  port: 8084   # el Gateway enruta /api/products/** a localhost:8084
+
+spring:
+  application:
+    name: product-service
+
+  # --- Base de datos: PostgreSQL + JPA/Hibernate ---
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product_db
+    username: product_user
+    password: product_pass
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # el esquema lo gestiona Flyway, Hibernate solo valida
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  # --- Flyway: migraciones en src/main/resources/db/migration ---
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  # --- Seguridad: validación de JWT contra Keycloak (igual que el Gateway) ---
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://keycloak:8081/realms/tu-realm
+
+  # --- Apache Pulsar: publicación de eventos (ProductoCreado, ProductoActualizado...) ---
+  pulsar:
+    client:
+      service-url: pulsar://localhost:6650
+    producer:
+      topic-name: persistent://public/default/product-events
+
+# --- Actuator: exposición de endpoints ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true   # /actuator/health/liveness y /readiness para k8s
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  # --- Trazas con Zipkin (mismo endpoint y sampling que el Gateway) ---
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0   # en producción baja esto (ej. 0.1)
+
+# --- OpenAPI / Swagger (si añades springdoc) ---
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.super-spring.product: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
