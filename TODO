@@ -1,1 +1,7 @@
-The origin of everything...
+Keycloak roles
+
+ANONYMOUS
+CLIENT
+ADMIN
+SELLER
+MANAGER
