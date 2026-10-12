@@ -1,11 +1,10 @@
 server:
-  port: 8084   # el Gateway enruta /api/products/** a localhost:8084
+  port: 8084
 
 spring:
   application:
     name: product-service
 
-  # --- Base de datos: PostgreSQL + JPA/Hibernate ---
   datasource:
     url: jdbc:postgresql://localhost:5432/product_db
     username: product_user
@@ -15,33 +14,33 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate   # el esquema lo gestiona Flyway, Hibernate solo valida
+      ddl-auto: validate   # the schema is managed by Flyway, so we just validate it
     open-in-view: false
     properties:
       hibernate:
         jdbc:
           time_zone: UTC
 
-  # --- Flyway: migraciones en src/main/resources/db/migration ---
+  # --- Flyway: migrations only in src/main/resources/db/migration ---
   flyway:
     enabled: true
     locations: classpath:db/migration
 
-  # --- Seguridad: validación de JWT contra Keycloak (igual que el Gateway) ---
+  # --- Security: JWT validation against Keycloak (same as the Gateway) ---
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8081/realms/tu-realm
 
-  # --- Apache Pulsar: publicación de eventos (ProductoCreado, ProductoActualizado...) ---
+  # --- Apache Pulsar: publishing of events (ProductCreated, ProductUpdated...) ---
   pulsar:
     client:
       service-url: pulsar://localhost:6650
     producer:
       topic-name: persistent://public/default/product-events
 
-# --- Actuator: exposición de endpoints ---
+# --- Actuator: endpoints exposure ---
 management:
   endpoints:
     web:
@@ -61,15 +60,15 @@ management:
           server:
             requests: true
 
-  # --- Trazas con Zipkin (mismo endpoint y sampling que el Gateway) ---
+  # --- Traces with Zipkin (same endpoint and sampling as the Gateway) ---
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
   tracing:
     sampling:
-      probability: 1.0   # en producción baja esto (ej. 0.1)
+      probability: 1.0   # at production, you might want to reduce this to 0.1 or 0.01
 
-# --- OpenAPI / Swagger (si añades springdoc) ---
+# --- OpenAPI / Swagger ---
 springdoc:
   api-docs:
     path: /v3/api-docs
