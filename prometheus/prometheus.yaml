@@ -7,8 +7,7 @@ scrape_configs:
     static_configs:
       - targets: ['api-gateway:8080']
 
-  # Uncomment when you have more microservices exposing /actuator/prometheus
-  # - job_name: 'product-service'
-  #   metrics_path: '/actuator/prometheus'
-  #   static_configs:
-  #     - targets: ['product-service:8080']
+  - job_name: 'product-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['product-service:8084']
