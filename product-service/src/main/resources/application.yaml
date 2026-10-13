@@ -36,9 +36,13 @@ spring:
   # --- Apache Pulsar: publishing of events (ProductCreated, ProductUpdated...) ---
   pulsar:
     client:
-      service-url: pulsar://localhost:6650
+      service-url: ${PULSAR_SERVICE_URL:pulsar://localhost:6650}
     producer:
       topic-name: persistent://public/default/product-events
+
+app:
+  pulsar:
+    import-export-completion-topic: ${PULSAR_IMPORT_EXPORT_COMPLETION_TOPIC:persistent://public/default/product-import-export-completed}
 
 # --- Actuator: endpoints exposure ---
 management:
@@ -63,7 +67,7 @@ management:
   # --- Traces with Zipkin (same endpoint and sampling as the Gateway) ---
   zipkin:
     tracing:
-      endpoint: http://localhost:9411/api/v2/spans
+      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://localhost:9411/api/v2/spans}
   tracing:
     sampling:
       probability: 1.0   # at production, you might want to reduce this to 0.1 or 0.01
@@ -76,6 +80,10 @@ springdoc:
     path: /swagger-ui.html
 
 logging:
+  file:
+    name: ${LOG_FILE:logs/product-service.log}
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
   level:
     com.super-spring.product: DEBUG
     org.springframework.security: INFO
