@@ -140,11 +140,11 @@ services:
   # ---------------------------------------------------
   # API Gateway
   # ---------------------------------------------------
-  gateway:
+  api-gateway:
     build:
-      context: ./gateway
+      context: ./api-gateway
       dockerfile: Dockerfile
-    container_name: gateway
+    container_name: api-gateway
     restart: unless-stopped
     environment:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/tu-realm
@@ -186,11 +186,46 @@ services:
   #//   networks:
   #//     - ecommerce-net
   #
-  # product-service:
-  #   build:
-  #     context: ./product-service
-  #   networks:
-  #     - ecommerce-net
+  product-db:
+    image: postgres:16
+    container_name: product-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: product
+      POSTGRES_USER: product
+      POSTGRES_PASSWORD: product
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U product"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/tu-realm
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://product-db:5432/product
+      SPRING_DATASOURCE_USERNAME: product
+      SPRING_DATASOURCE_PASSWORD: product
+    volumes:
+      - ./product-service/logs:/app/logs
+    networks:
+      - ecommerce-net
+    depends_on:
+      - product-db
+      - redis
+      - zipkin
   #
   # cart-service:
   #   build:
