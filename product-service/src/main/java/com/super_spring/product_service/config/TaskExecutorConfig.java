@@ -4,11 +4,29 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.core.task.TaskDecorator;
+import org.slf4j.MDC;
+
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync
 public class TaskExecutorConfig {
+
+    private final TaskDecorator mdcTaskDecorator = runnable -> {
+        Map<String, String> context = MDC.getCopyOfContextMap();
+        return () -> {
+            if (context != null) {
+                MDC.setContextMap(context);
+            }
+            try {
+                runnable.run();
+            } finally {
+                MDC.clear();
+            }
+        };
+    };
 
     @Bean(name = "exportTaskExecutor")
     public Executor exportTaskExecutor() {
@@ -17,6 +35,7 @@ public class TaskExecutorConfig {
         executor.setMaxPoolSize(5);
         executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("Export-");
+        executor.setTaskDecorator(mdcTaskDecorator);
         executor.initialize();
         return executor;
     }
@@ -28,6 +47,7 @@ public class TaskExecutorConfig {
         executor.setMaxPoolSize(5);
         executor.setQueueCapacity(500);
         executor.setThreadNamePrefix("Import-");
+        executor.setTaskDecorator(mdcTaskDecorator);
         executor.initialize();
         return executor;
     }
