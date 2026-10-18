@@ -1,5 +1,7 @@
 package com.super_spring.product_service.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.RestController;
 import org.springframework.ui.Model;
@@ -9,18 +11,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.super_spring.product_service.model.dto.ProductDTO;
 import com.super_spring.product_service.service.ProductService;
+import com.super_spring.product_service.service.ImportExportProductService;
 
 @RestController
 @RequestMapping("/products")
 public class ProductController {
     
     private final ProductService productService;
+    private final ImportExportProductService importExportProductService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(ProductService productService, ImportExportProductService importExportProductService) {
         this.productService = productService;
+        this.importExportProductService = importExportProductService;
     }
 
-    //? It has to be DTO? Is the stock really necessary? Maybe it can be two methods, one for DTO and another for entity.
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProductsPaginated(
             @RequestParam(defaultValue = "0") int offset,
@@ -31,27 +35,25 @@ public class ProductController {
         return ResponseEntity.ok().header("X-Total-Count", String.valueOf(totalCount)).body(products);
     }
 
-    //? It has to be DTO? Is the stock really necessary? Maybe it can be two methods, one for DTO and another for entity.
     @GetMapping("/{id}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
     public String createOrUpdateProduct(@RequestBody Product product) {
-        //TODO Validate user role by jwt token before allowing product creation or update
-        return "result";
+        return productService.createOrUpdateProduct(product);
     }
 
     @GetMapping("/export")
     public MultipartFile exportProductsToCsv() {
-        return "csv";
+        return importExportProductService.exportProductsToCsv();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/import")
     public String importProductsFromCsv(@RequestParam("file") MultipartFile file) {
-        //TODO Validate user role by jwt token before allowing product creation or update
-        
-        return "result";
+        return importExportProductService.importProductsFromCsv(file);
     }
 }

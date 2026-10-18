@@ -15,27 +15,26 @@ public class ProductService {
     }
 
     public List<Product> getProducts(int offset, int limit) {
-        //TODO Implementation for fetching products with pagination
-        return productRepository.getProductsWithPagination(offset, limit);
+        return productRepository.findAll(PageRequest.of(offset, limit)).getContent();
     }
 
     public int getTotalCount() {
-        //TODO Implementation for fetching total count of products
-        return 0;
+        return (int) productRepository.count();
     }
 
     public Product getProductById(Long id) {
-        //TODO Implementation for fetching a product by its ID
-        return 
+        return productRepository.findById(id).orElse(null);
     }
 
-    public Product createOrUpdateProduct(Product product) {
-        //TODO Implementation for creating or updating a product
-        return new Product();
+    public String createOrUpdateProduct(Product product) {
+        return productRepository.save(product).getId().toString();
     }
 
-    public void deleteProduct(Long id) {
-        //TODO Implementation for deleting a product by its ID
+    public boolean deleteProduct(Long id) {
+        if (!productRepository.existsById(id)) {
+            return false;
+        }
+        productRepository.deleteById(id);
+        return true;
     }
-
 }
