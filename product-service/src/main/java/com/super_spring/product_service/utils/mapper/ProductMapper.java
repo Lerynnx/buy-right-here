@@ -1,4 +1,4 @@
-package com.super_spring.product_service.mapper;
+package com.super_spring.product_service.utils.mapper;
 
 import java.util.List;
 
@@ -19,4 +19,5 @@ public interface ProductMapper {
     ProductDTO toDto(Product product, InventoryDTO inventory);
 
     List<ProductDTO> toDtoList(List<Product> products);
+
 }
