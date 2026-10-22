@@ -9,3 +9,28 @@ MANAGER
 
 The type of font used for the word Service banner is: small
 https://patorjk.com/software/taag/#p=display&f=Small&t=Product+Service&x=none&v=4&h=4&w=80&we=false
+
+The export flow can be done this way:
+UI user press export button -> gateway -> product service -> export process
+                                                                  |
+                                                        Create UsId-csv on files directory
+                                                                  |
+                                                        Send notification to Pulsar
+
+Notify service --> Gateway (SSE) --> UI alert --> Button display --> download file (maybe with a thead or process or maybe is not necessary)
+      |
+Send email to user
+
+Timer to delete files every day
+
+
+The import flow can be done this way:
+UI user press import button -> gateway -> product service -> import process
+                                                                  |
+                                                             Update DB
+                                                                  |
+                                                        Send notification to Pulsar
+
+Notify service --> Gateway(SSE) --> UI alert
+      |
+Send email to user

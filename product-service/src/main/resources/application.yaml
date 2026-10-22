@@ -36,7 +36,7 @@ spring:
   # --- Apache Pulsar: publishing of events (ProductCreated, ProductUpdated...) ---
   pulsar:
     client:
-      service-url: ${PULSAR_SERVICE_URL:pulsar://localhost:6650}
+      service-url: ${PULSAR_SERVICE_URL:pulsar://pulsar:6650}
     producer:
       topic-name: persistent://public/default/product-events
 
