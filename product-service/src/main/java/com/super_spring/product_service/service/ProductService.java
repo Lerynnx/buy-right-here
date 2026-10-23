@@ -26,14 +26,12 @@ public class ProductService {
     public List<ProductDTO> getProducts(int offset, int limit) {
         List<Product> products = productRepository.findAll(PageRequest.of(offset, limit)).getContent();
         List<ProductDTO> productDTOs = ProductMapper.toDTOList(products);
-
         for (ProductDTO productDTO : productDTOs) {
             InventoryDTO inventory = inventoryApiClient.getInventoryByProductId(productDTO.getId());
             if (inventory != null) {
                 productDTO.setStock(inventory.getStock());
             }
         }
-
         return productDTOs;
     }
 
@@ -65,6 +63,5 @@ public class ProductService {
         inventoryApiClient.deleteInventoryByProductId(id);
         return true;
     }
-
 
 }

@@ -29,16 +29,13 @@ public class ProductController {
     public ResponseEntity<List<ProductDTO>> getAllProductsPaginated(
             @RequestParam(defaultValue = "0") int offset,
             @RequestParam(defaultValue = "10") int limit) {
-
         if (offset < 0 || limit <= 0) {
             return ResponseEntity.badRequest().build();
         }else if (limit > 100) {
             limit = 100; // Cap the limit to 100 to prevent excessive data retrieval
         }
-
         List<ProductDTO> products = productService.getProducts(offset, limit);
         int totalCount = productService.getTotalCount();
-
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -50,13 +47,10 @@ public class ProductController {
         if (id <= 0) {
             return ResponseEntity.badRequest().build();
         }
-
         ProductDTO product = productService.getProductById(id);
-
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
-
         return ResponseEntity.ok(product);
     }
 
@@ -66,12 +60,11 @@ public class ProductController {
         if (product == null || product.getId() == null) {
             return ResponseEntity.badRequest().body("Product or Product ID must not be null");
         }
-
         return productService.createOrUpdateProduct(product);
     }
 
     @GetMapping("/export")
-    public MultipartFile exportProductsToCsv() {
+    public String exportProductsToCsv() {
         return importExportProductService.exportProductsToCsv();
     }
 
@@ -81,7 +74,6 @@ public class ProductController {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body("File must not be null or empty");
         }
-        
         return importExportProductService.importProductsFromCsv(file);
     }
 }
