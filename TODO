@@ -34,3 +34,11 @@ UI user press import button -> gateway -> product service -> import process
 Notify service --> Gateway(SSE) --> UI alert
       |
 Send email to user
+
+
+
+For the stock visualization at the frontend:
+- Add attribute stockLabel to the Product entity and DTO
+- Make a listener to check inventory update events.
+      - Save the product label if the label is different of the product bd
+      - Labels: With Stock, Low Stock, Last Units, Sold Out
