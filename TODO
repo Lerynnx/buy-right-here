@@ -46,3 +46,7 @@ For the stock visualization at the frontend:
 ROADMAP
 - Ensure the import export functionality
 - Adapt the code to implement the stock labels which is said above
+
+
+IMPORTANT NOTES
+- Inventory service MUST return the stocks ORDER BY product.id at exportation calls
