@@ -1,14 +1,20 @@
 package com.super_spring.product_service.controller;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.RestController;
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.super_spring.product_service.entity.Product;
 import com.super_spring.product_service.model.dto.ProductDTO;
 import com.super_spring.product_service.service.ProductService;
 import com.super_spring.product_service.service.ImportExportProductService;
@@ -56,24 +62,24 @@ public class ProductController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public String createOrUpdateProduct(@RequestBody Product product) {
-        if (product == null || product.getId() == null) {
-            return ResponseEntity.badRequest().body("Product or Product ID must not be null");
+    public ResponseEntity<?> createOrUpdateProduct(@RequestBody Product product) {
+        if (product == null) {
+            return ResponseEntity.badRequest().body("Product must not be null");
         }
-        return productService.createOrUpdateProduct(product);
+        return ResponseEntity.ok(productService.createOrUpdateProduct(product));
     }
 
     @GetMapping("/export")
-    public String exportProductsToCsv() {
+    public CompletableFuture<Void> exportProductsToCsv() {
         return importExportProductService.exportProductsToCsv();
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping("/import")
-    public String importProductsFromCsv(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> importProductsFromCsv(@RequestParam("file") MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body("File must not be null or empty");
         }
-        return importExportProductService.importProductsFromCsv(file);
+        return ResponseEntity.accepted().body(importExportProductService.importProductsFromCsv(file));
     }
 }
