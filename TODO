@@ -42,3 +42,7 @@ For the stock visualization at the frontend:
 - Make a listener to check inventory update events.
       - Save the product label if the label is different of the product bd
       - Labels: With Stock, Low Stock, Last Units, Sold Out
+
+ROADMAP
+- Ensure the import export functionality
+- Adapt the code to implement the stock labels which is said above
