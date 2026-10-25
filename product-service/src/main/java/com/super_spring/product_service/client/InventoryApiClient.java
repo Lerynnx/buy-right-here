@@ -1,7 +1,11 @@
-package main.java.com.super_spring.product_service.client;
+package com.super_spring.product_service.client;
 
 import java.util.List;
+
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
+
 import com.super_spring.product_service.model.dto.InventoryDTO;
 
 @Component
@@ -33,7 +37,7 @@ public class InventoryApiClient {
     public InventoryDTO createInventory(InventoryDTO inventoryDTO) {
         return restClient.post()
                 .uri("/inventory")
-                .bodyValue(inventoryDTO)
+                .body(inventoryDTO)
                 .retrieve()
                 .body(new ParameterizedTypeReference<InventoryDTO>() {});
     }
@@ -41,7 +45,7 @@ public class InventoryApiClient {
     public InventoryDTO updateInventory(Long productId, InventoryDTO inventoryDTO) {
         return restClient.put()
                 .uri("/inventory/{productId}", productId)
-                .bodyValue(inventoryDTO)
+                .body(inventoryDTO)
                 .retrieve()
                 .body(new ParameterizedTypeReference<InventoryDTO>() {});
     }
@@ -51,6 +55,6 @@ public class InventoryApiClient {
         restClient.delete()
                 .uri("/inventory/{productId}", productId)
                 .retrieve()
-                .body(new ParameterizedTypeReference<Void>() {});
+                .toBodilessEntity();
     }
 }
