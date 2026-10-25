@@ -1,4 +1,4 @@
-package com.super_spring.product_service.model;
+package com.super_spring.product_service.messaging;
 
 import java.time.Instant;
 

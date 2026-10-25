@@ -1,4 +1,4 @@
-package com.super_spring.product_service.entity;
+package com.super_spring.product_service.product.entity;
 
 import java.time.Instant;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.super_spring.product_service.model.dto;
+package com.super_spring.product_service.product.dto;
 
 import java.time.Instant;
 import java.util.List;

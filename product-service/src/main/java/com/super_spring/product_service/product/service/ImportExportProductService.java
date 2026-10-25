@@ -1,4 +1,4 @@
-package com.super_spring.product_service.service;
+package com.super_spring.product_service.product.service;
 
 import java.util.concurrent.CompletableFuture;
 

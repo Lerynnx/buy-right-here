@@ -1,25 +1,25 @@
-package com.super_spring.product_service.service;
+package com.super_spring.product_service.product.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.super_spring.product_service.client.InventoryApiClient;
-import com.super_spring.product_service.entity.Product;
-import com.super_spring.product_service.repository.IProductRepository;
-import com.super_spring.product_service.model.dto.InventoryDTO;
-import com.super_spring.product_service.model.dto.ProductDTO;
-import com.super_spring.product_service.utils.mapper.ProductMapper;
+import com.super_spring.product_service.inventory.client.InventoryApiClient;
+import com.super_spring.product_service.product.dto.ProductDTO;
+import com.super_spring.product_service.inventory.dto.InventoryDTO;
+import com.super_spring.product_service.product.entity.Product;
+import com.super_spring.product_service.product.mapper.ProductMapper;
+import com.super_spring.product_service.product.repository.ProductRepository;
 
 @Service
 public class ProductService {
 
-    private final IProductRepository productRepository;
+    private final ProductRepository productRepository;
     private final InventoryApiClient inventoryApiClient;
     private final ProductMapper productMapper;
 
     public ProductService(
-            IProductRepository productRepository,
+            ProductRepository productRepository,
             InventoryApiClient inventoryApiClient,
             ProductMapper productMapper) {
         this.productRepository = productRepository;

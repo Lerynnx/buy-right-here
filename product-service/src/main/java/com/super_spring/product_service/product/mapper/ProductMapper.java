@@ -1,13 +1,13 @@
-package com.super_spring.product_service.utils.mapper;
+package com.super_spring.product_service.product.mapper;
 
 import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.super_spring.product_service.entity.Product;
-import com.super_spring.product_service.model.dto.InventoryDTO;
-import com.super_spring.product_service.model.dto.ProductDTO;
+import com.super_spring.product_service.product.dto.ProductDTO;
+import com.super_spring.product_service.inventory.dto.InventoryDTO;
+import com.super_spring.product_service.product.entity.Product;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {

@@ -1,4 +1,4 @@
-package com.super_spring.product_service.controller;
+package com.super_spring.product_service.product.controller;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.super_spring.product_service.entity.Product;
-import com.super_spring.product_service.model.dto.ProductDTO;
-import com.super_spring.product_service.service.ProductService;
-import com.super_spring.product_service.service.ImportExportProductService;
-import com.super_spring.product_service.utils.mapper.ProductMapper;
+import com.super_spring.product_service.product.dto.ProductDTO;
+import com.super_spring.product_service.product.entity.Product;
+import com.super_spring.product_service.product.mapper.ProductMapper;
+import com.super_spring.product_service.product.service.ImportExportProductService;
+import com.super_spring.product_service.product.service.ProductService;
 
 @RestController
 @RequestMapping("/products")

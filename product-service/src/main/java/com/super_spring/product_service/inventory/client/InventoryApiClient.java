@@ -1,4 +1,4 @@
-package com.super_spring.product_service.client;
+package com.super_spring.product_service.inventory.client;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.super_spring.product_service.model.dto.InventoryDTO;
+import com.super_spring.product_service.inventory.dto.InventoryDTO;
 
 @Component
 public class InventoryApiClient {
