@@ -1,9 +1,11 @@
 package com.super_spring.product_service.product.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public record ProductDTO (
     long id,
     long categoryId,
@@ -11,7 +13,8 @@ public record ProductDTO (
     String description,
     double price,
     double tax, //IVA percentage (e.g., 0.21 for 21% tax)
-    int stock,
+    Integer stock,
+    String stockLabel,
     Instant uploadingDate,
     List<String> imageUrls,
     String brand,

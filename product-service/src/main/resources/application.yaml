@@ -59,6 +59,8 @@ app:
     page-size: ${APP_EXPORT_PAGE_SIZE:200}
   pulsar:
     import-export-completion-topic: ${PULSAR_IMPORT_EXPORT_COMPLETION_TOPIC:persistent://public/default/product-import-export-completed}
+    inventory-update-topic: ${PULSAR_INVENTORY_UPDATE_TOPIC:persistent://public/default/inventory-updated}
+    inventory-update-subscription: ${PULSAR_INVENTORY_UPDATE_SUBSCRIPTION:product-service-stock-labels}
 
 # --- Actuator: endpoints exposure ---
 management:

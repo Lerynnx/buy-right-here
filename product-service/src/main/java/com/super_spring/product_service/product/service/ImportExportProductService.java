@@ -207,6 +207,7 @@ public class ImportExportProductService {
                 nullable(columns.get(3)),
                 Double.parseDouble(columns.get(4)),
                 Double.parseDouble(columns.get(5)),
+                null,
                 parseInstant(columns.get(6)),
                 parseJson(columns.get(7), new TypeReference<List<String>>() {}),
                 nullable(columns.get(8)),

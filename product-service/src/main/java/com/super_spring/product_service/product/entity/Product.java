@@ -28,6 +28,7 @@ public class Product {
     private String description;
     private double price;
     private double tax; //IVA percentage (e.g., 0.21 for 21% tax)
+    private String stockLabel;
     private Instant uploadingDate;
     @JdbcTypeCode(SqlTypes.JSON)
     private List<String> imageUrls;

@@ -29,9 +29,7 @@ public class ProductService {
 
     public List<ProductDTO> getProducts(int offset, int limit) {
         return productRepository.getProductsWithPagination(offset, limit).stream()
-                .map(product -> productMapper.toDto(
-                        product,
-                        inventoryApiClient.getInventoryByProductId(product.getId())))
+                .map(productMapper::toDto)
                 .toList();
     }
 

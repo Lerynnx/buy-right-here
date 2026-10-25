@@ -11,5 +11,6 @@ CREATE TABLE products (
     attributes JSONB,
     rating DOUBLE PRECISION NOT NULL,
     total_reviews INTEGER NOT NULL,
+    stock_label VARCHAR(30),
     active BOOLEAN NOT NULL
 );
