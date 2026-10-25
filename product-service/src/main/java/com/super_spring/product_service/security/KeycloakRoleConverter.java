@@ -1,14 +1,14 @@
-package main.java.com.super_spring.product_service.security;
+package com.super_spring.product_service.security;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import java.util.Collections;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.core.convert.converter.Converter;
 
 @Component
 public class KeycloakRoleConverter
@@ -24,11 +24,16 @@ public class KeycloakRoleConverter
             return Collections.emptyList();
         }
 
-        List<String> roles =
-                (List<String>) realmAccess.get("roles");
+        Object rolesClaim = realmAccess.get("roles");
+        if (!(rolesClaim instanceof List<?> roles)) {
+            return Collections.emptyList();
+        }
 
         return roles.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .map(authority -> (GrantedAuthority) authority)
                 .toList();
     }
 }
