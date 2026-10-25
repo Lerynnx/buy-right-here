@@ -1,6 +1,7 @@
 package com.super_spring.product_service.service;
 
 import java.time.Instant;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
@@ -35,7 +36,14 @@ public class ImportExportNotificationPublisher {
 
     public CompletableFuture<Void> publish(String operation, String status) {
         ImportExportCompletionEvent event = new ImportExportCompletionEvent(
-                operation, status, Instant.now(), MDC.get("traceId"));
+                UUID.randomUUID().toString(),
+                operation,
+                null,
+                operation,
+                status,
+                null,
+                Instant.now(),
+                MDC.get("traceId"));
         final String payload;
         try {
             payload = objectMapper.writeValueAsString(event);

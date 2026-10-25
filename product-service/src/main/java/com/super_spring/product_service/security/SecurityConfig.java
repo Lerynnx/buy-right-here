@@ -1,4 +1,4 @@
-package main.java.com.super_spring.product_service.security;
+package com.super_spring.product_service.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
