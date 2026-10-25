@@ -56,6 +56,14 @@ public class InventoryApiClient {
                 .body(new ParameterizedTypeReference<InventoryDTO>() {});
     }
 
+    public void createOrUpdateInventories(List<InventoryDTO> inventories, String batchPath) {
+        restClient.post()
+                .uri(batchPath)
+                .body(inventories)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
     public InventoryDTO updateInventory(Long productId, InventoryDTO inventoryDTO) {
         return restClient.put()
                 .uri(ApplicationConstants.INVENTORY_PRODUCT_PATH, productId)

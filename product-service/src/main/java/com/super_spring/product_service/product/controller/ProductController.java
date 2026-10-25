@@ -101,11 +101,13 @@ public class ProductController {
             ApplicationConstants.MANAGER_ROLE + "')")
     @PostMapping(ApplicationConstants.IMPORT_PATH)
     public ResponseEntity<?> importProductsFromCsv(
-            @RequestParam(ApplicationConstants.FILE_REQUEST_PARAM) MultipartFile file) {
+            @RequestParam(ApplicationConstants.FILE_REQUEST_PARAM) MultipartFile file,
+            @AuthenticationPrincipal Jwt jwt) {
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(
                     ApplicationConstants.FILE_MUST_NOT_BE_NULL_OR_EMPTY);
         }
-        return ResponseEntity.accepted().body(importExportProductService.importProductsFromCsv(file));
+        return ResponseEntity.accepted().body(importExportProductService.startImport(
+                file, jwt == null ? "system" : jwt.getSubject()));
     }
 }

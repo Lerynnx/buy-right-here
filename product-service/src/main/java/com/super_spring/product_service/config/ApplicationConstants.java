@@ -9,6 +9,7 @@ public final class ApplicationConstants {
     public static final String IMPORT_PATH = "/import";
     public static final String ACTUATOR_PATH = "/actuator/**";
     public static final String INVENTORY_PATH = "/inventory";
+    public static final String INVENTORY_BATCH_PATH = "/inventory/batch";
     public static final String INVENTORY_PRODUCT_PATH = "/inventory/{productId}";
     public static final String TOTAL_COUNT_HEADER = "X-Total-Count";
     public static final String CONTENT_DISPOSITION_HEADER = "Content-Disposition";
@@ -30,6 +31,8 @@ public final class ApplicationConstants {
     public static final String TRACE_ID_MDC_KEY = "traceId";
 
     public static final String EXPORT_OPERATION = "export";
+    public static final String IMPORT_OPERATION = "import";
+    public static final int DEFAULT_IMPORT_BATCH_SIZE = 200;
     public static final String COMPLETED_STATUS = "COMPLETED";
     public static final String FAILED_STATUS = "FAILED";
     public static final String METRIC_OPERATION_TAG = "operation";
@@ -53,6 +56,7 @@ public final class ApplicationConstants {
             "Failed to publish {} completion notification to {}";
     public static final String UNABLE_TO_READ_EXPORT_LOG = "Unable to read export {}";
     public static final String EXPORT_FAILED_LOG = "Product export {} failed";
+    public static final String IMPORT_FAILED_LOG = "Product import {} failed";
     public static final String UNABLE_TO_CLEAN_EXPORT_DIRECTORY_LOG =
             "Unable to clean export directory {}";
     public static final String UNABLE_TO_DELETE_LOG = "Unable to delete {}";

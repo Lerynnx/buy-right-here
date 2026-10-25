@@ -1,14 +1,20 @@
 package com.super_spring.product_service.product.service;
 
 import java.io.BufferedWriter;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
+import java.util.stream.IntStream;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.regex.Pattern;
@@ -22,7 +28,6 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +38,7 @@ import com.super_spring.product_service.inventory.dto.InventoryDTO;
 import com.super_spring.product_service.messaging.ImportExportNotificationPublisher;
 import com.super_spring.product_service.config.ApplicationConstants;
 import com.super_spring.product_service.product.dto.ExportStartResponse;
+import com.super_spring.product_service.product.dto.ImportStartResponse;
 import com.super_spring.product_service.product.entity.Product;
 import com.super_spring.product_service.product.repository.ProductRepository;
 
@@ -52,8 +58,11 @@ public class ImportExportProductService {
     private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry;
     private final Executor exportTaskExecutor;
+    private final Executor importTaskExecutor;
     private final Path exportDirectory;
     private final int pageSize;
+    private final int importBatchSize;
+    private final String inventoryBatchPath;
 
     public ImportExportProductService(
             ImportExportNotificationPublisher notificationPublisher,
@@ -62,16 +71,27 @@ public class ImportExportProductService {
             ObjectMapper objectMapper,
             MeterRegistry meterRegistry,
             @Qualifier(ApplicationConstants.EXPORT_TASK_EXECUTOR) Executor exportTaskExecutor,
+            @Qualifier(ApplicationConstants.IMPORT_TASK_EXECUTOR) Executor importTaskExecutor,
             @Value("${app.export.directory}") String exportDirectory,
-            @Value("${app.export.page-size}") int pageSize) {
+            @Value("${app.export.page-size}") int pageSize,
+            @Value("${app.inventory.import-batch-size:"
+                    + ApplicationConstants.DEFAULT_IMPORT_BATCH_SIZE + "}") int importBatchSize,
+            @Value("${app.inventory.batch-path:" + ApplicationConstants.INVENTORY_BATCH_PATH
+                    + "}") String inventoryBatchPath) {
         this.notificationPublisher = notificationPublisher;
         this.productRepository = productRepository;
         this.inventoryApiClient = inventoryApiClient;
         this.objectMapper = objectMapper;
         this.meterRegistry = meterRegistry;
         this.exportTaskExecutor = exportTaskExecutor;
+        this.importTaskExecutor = importTaskExecutor;
         this.exportDirectory = Paths.get(exportDirectory).toAbsolutePath().normalize();
         this.pageSize = pageSize;
+        if (importBatchSize <= 0) {
+            throw new IllegalArgumentException("Import batch size must be greater than zero");
+        }
+        this.importBatchSize = importBatchSize;
+        this.inventoryBatchPath = inventoryBatchPath;
     }
 
     public ExportStartResponse startExport(String userId) {
@@ -108,9 +128,160 @@ public class ImportExportProductService {
         }
     }
 
-    @Async(ApplicationConstants.IMPORT_TASK_EXECUTOR)
-    public CompletableFuture<Void> importProductsFromCsv(MultipartFile file) {
-        return CompletableFuture.completedFuture(null);
+    public ImportStartResponse startImport(MultipartFile file, String userId) {
+        final byte[] content;
+        try {
+            content = file.getBytes();
+        } catch (IOException exception) {
+            throw new IllegalArgumentException("Unable to read import file", exception);
+        }
+        String operationId = UUID.randomUUID().toString();
+        CompletableFuture.runAsync(
+                () -> executeImport(operationId, userId, file.getOriginalFilename(), content),
+                importTaskExecutor);
+        return new ImportStartResponse(operationId);
+    }
+
+    private void executeImport(String operationId, String userId, String fileName, byte[] content) {
+        Timer.Sample sample = Timer.start(meterRegistry);
+        try {
+            importCsv(content);
+            meterRegistry.counter(ApplicationConstants.COMPLETED_METRIC,
+                    ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.IMPORT_OPERATION).increment();
+            notificationPublisher.publish(operationId, userId, ApplicationConstants.IMPORT_OPERATION,
+                    ApplicationConstants.COMPLETED_STATUS, fileName);
+        } catch (Exception exception) {
+            meterRegistry.counter(ApplicationConstants.FAILED_METRIC,
+                    ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.IMPORT_OPERATION).increment();
+            LOGGER.error(ApplicationConstants.IMPORT_FAILED_LOG, operationId, exception);
+            notificationPublisher.publish(operationId, userId, ApplicationConstants.IMPORT_OPERATION,
+                    ApplicationConstants.FAILED_STATUS, fileName);
+        } finally {
+            sample.stop(Timer.builder(ApplicationConstants.DURATION_METRIC)
+                    .description(ApplicationConstants.OPERATION_DURATION_DESCRIPTION)
+                    .tag(ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.IMPORT_OPERATION)
+                    .register(meterRegistry));
+        }
+    }
+
+    private void importCsv(byte[] content) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new ByteArrayInputStream(content), StandardCharsets.UTF_8))) {
+            String header = reader.readLine();
+            if (header == null || !header.replace("\uFEFF", "").equals(ApplicationConstants.CSV_HEADER)) {
+                throw new IllegalArgumentException("Invalid product import CSV header");
+            }
+
+            List<ImportRecord> batch = new ArrayList<>(importBatchSize);
+            String line;
+            int rowNumber = 1;
+            while ((line = reader.readLine()) != null) {
+                rowNumber++;
+                if (line.isBlank()) {
+                    continue;
+                }
+                try {
+                    batch.add(parseImportRecord(parseCsvLine(line)));
+                } catch (RuntimeException exception) {
+                    throw new IllegalArgumentException("Invalid CSV row " + rowNumber, exception);
+                }
+                if (batch.size() == importBatchSize) {
+                    processImportBatch(batch);
+                    batch.clear();
+                }
+            }
+            if (!batch.isEmpty()) {
+                processImportBatch(batch);
+            }
+        }
+    }
+
+    private ImportRecord parseImportRecord(List<String> columns) {
+        if (columns.size() != 14) {
+            throw new IllegalArgumentException("Expected 14 columns but found " + columns.size());
+        }
+        Product product = new Product(
+                parseLong(columns.get(0)),
+                Long.parseLong(columns.get(1)),
+                nullable(columns.get(2)),
+                nullable(columns.get(3)),
+                Double.parseDouble(columns.get(4)),
+                Double.parseDouble(columns.get(5)),
+                parseInstant(columns.get(6)),
+                parseJson(columns.get(7), new TypeReference<List<String>>() {}),
+                nullable(columns.get(8)),
+                parseJson(columns.get(9), new TypeReference<java.util.Map<String, String>>() {}),
+                Double.parseDouble(columns.get(10)),
+                Integer.parseInt(columns.get(11)),
+                Boolean.parseBoolean(columns.get(12)));
+        return new ImportRecord(product, Integer.parseInt(columns.get(13)));
+    }
+
+    private void processImportBatch(List<ImportRecord> records) {
+        List<Product> products = records.stream().map(ImportRecord::product).toList();
+        List<Product> savedProducts = productRepository.saveAll(products);
+        List<InventoryDTO> inventories = new ArrayList<>(savedProducts.size());
+        IntStream.range(0, savedProducts.size()).forEach(index -> {
+            Product product = savedProducts.get(index);
+            inventories.add(new InventoryDTO(0, product.getId(),
+                    records.get(index).stock(), product.isActive()));
+        });
+        if (!inventories.isEmpty()) {
+            inventoryApiClient.createOrUpdateInventories(inventories, inventoryBatchPath);
+        }
+    }
+
+    private List<String> parseCsvLine(String line) {
+        List<String> columns = new ArrayList<>();
+        StringBuilder value = new StringBuilder();
+        boolean quoted = false;
+        for (int index = 0; index < line.length(); index++) {
+            char current = line.charAt(index);
+            if (current == '"') {
+                if (quoted && index + 1 < line.length() && line.charAt(index + 1) == '"') {
+                    value.append('"');
+                    index++;
+                } else {
+                    quoted = !quoted;
+                }
+            } else if (current == ',' && !quoted) {
+                columns.add(value.toString());
+                value.setLength(0);
+            } else {
+                value.append(current);
+            }
+        }
+        if (quoted) {
+            throw new IllegalArgumentException("Unclosed quoted value");
+        }
+        columns.add(value.toString());
+        return columns;
+    }
+
+    private long parseLong(String value) {
+        return value.isBlank() ? 0 : Long.parseLong(value);
+    }
+
+    private String nullable(String value) {
+        return value.isBlank() ? null : value;
+    }
+
+    private java.time.Instant parseInstant(String value) {
+        return value.isBlank() ? null : java.time.Instant.parse(value);
+    }
+
+    private <T> T parseJson(String value, TypeReference<T> type) {
+        if (value.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(value, type);
+        } catch (JsonProcessingException exception) {
+            throw new IllegalArgumentException("Invalid JSON value", exception);
+        }
+    }
+
+    private record ImportRecord(Product product, int stock) {
     }
 
     private void executeExport(String operationId, String userId) {
