@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.super_spring.product_service.inventory.client.InventoryApiClient;
 import com.super_spring.product_service.inventory.dto.InventoryDTO;
 import com.super_spring.product_service.messaging.ImportExportNotificationPublisher;
+import com.super_spring.product_service.config.ApplicationConstants;
 import com.super_spring.product_service.product.dto.ExportStartResponse;
 import com.super_spring.product_service.product.entity.Product;
 import com.super_spring.product_service.product.repository.ProductRepository;
@@ -42,10 +43,8 @@ import io.micrometer.core.instrument.Timer;
 public class ImportExportProductService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportExportProductService.class);
-    private static final int PAGE_SIZE = 200;
-    private static final String OPERATION = "export";
-    private static final String METRIC_OPERATION_TAG = "operation";
-    private static final Pattern CSV_FILE_NAME = Pattern.compile("export-[0-9a-f-]+\\.csv");
+    private static final Pattern CSV_FILE_NAME =
+            Pattern.compile(ApplicationConstants.CSV_FILE_NAME_REGEX);
 
     private final ImportExportNotificationPublisher notificationPublisher;
     private final ProductRepository productRepository;
@@ -54,6 +53,7 @@ public class ImportExportProductService {
     private final MeterRegistry meterRegistry;
     private final Executor exportTaskExecutor;
     private final Path exportDirectory;
+    private final int pageSize;
 
     public ImportExportProductService(
             ImportExportNotificationPublisher notificationPublisher,
@@ -61,8 +61,9 @@ public class ImportExportProductService {
             InventoryApiClient inventoryApiClient,
             ObjectMapper objectMapper,
             MeterRegistry meterRegistry,
-            @Qualifier("exportTaskExecutor") Executor exportTaskExecutor,
-            @Value("${app.export.directory:./src/main/resources/files}") String exportDirectory) {
+            @Qualifier(ApplicationConstants.EXPORT_TASK_EXECUTOR) Executor exportTaskExecutor,
+            @Value("${app.export.directory}") String exportDirectory,
+            @Value("${app.export.page-size}") int pageSize) {
         this.notificationPublisher = notificationPublisher;
         this.productRepository = productRepository;
         this.inventoryApiClient = inventoryApiClient;
@@ -70,6 +71,7 @@ public class ImportExportProductService {
         this.meterRegistry = meterRegistry;
         this.exportTaskExecutor = exportTaskExecutor;
         this.exportDirectory = Paths.get(exportDirectory).toAbsolutePath().normalize();
+        this.pageSize = pageSize;
     }
 
     public ExportStartResponse startExport(String userId) {
@@ -84,7 +86,7 @@ public class ImportExportProductService {
         }
 
         Path file = exportDirectory.resolve(fileName).normalize();
-        Path ownerFile = exportDirectory.resolve(fileName + ".owner").normalize();
+        Path ownerFile = exportDirectory.resolve(fileName + ApplicationConstants.OWNER_FILE_SUFFIX).normalize();
         if (!file.startsWith(exportDirectory) || !ownerFile.startsWith(exportDirectory)
                 || !Files.isRegularFile(file) || !Files.isRegularFile(ownerFile)) {
             return ResponseEntity.notFound().build();
@@ -96,39 +98,46 @@ public class ImportExportProductService {
                 return ResponseEntity.status(403).build();
             }
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType("text/csv"))
-                    .header("Content-Disposition", "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.parseMediaType(ApplicationConstants.CSV_MEDIA_TYPE))
+                    .header(ApplicationConstants.CONTENT_DISPOSITION_HEADER,
+                            ApplicationConstants.ATTACHMENT_CONTENT_DISPOSITION + fileName + "\"")
                     .body(new FileSystemResource(file));
         } catch (IOException exception) {
-            LOGGER.error("Unable to read export {}", fileName, exception);
+            LOGGER.error(ApplicationConstants.UNABLE_TO_READ_EXPORT_LOG, fileName, exception);
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    @Async("importTaskExecutor")
+    @Async(ApplicationConstants.IMPORT_TASK_EXECUTOR)
     public CompletableFuture<Void> importProductsFromCsv(MultipartFile file) {
         return CompletableFuture.completedFuture(null);
     }
 
     private void executeExport(String operationId, String userId) {
         Timer.Sample sample = Timer.start(meterRegistry);
-        String fileName = "export-" + operationId + ".csv";
+        String fileName = ApplicationConstants.EXPORT_FILE_PREFIX + operationId
+                + ApplicationConstants.CSV_FILE_SUFFIX;
         Path output = exportDirectory.resolve(fileName);
         try {
             Files.createDirectories(exportDirectory);
             writeProducts(output);
-            Files.writeString(exportDirectory.resolve(fileName + ".owner"), userId, StandardCharsets.UTF_8);
-            meterRegistry.counter("product.import_export.completed", METRIC_OPERATION_TAG, OPERATION).increment();
-            notificationPublisher.publish(operationId, userId, OPERATION, "COMPLETED", fileName);
+            Files.writeString(exportDirectory.resolve(fileName + ApplicationConstants.OWNER_FILE_SUFFIX),
+                    userId, StandardCharsets.UTF_8);
+            meterRegistry.counter(ApplicationConstants.COMPLETED_METRIC,
+                    ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.EXPORT_OPERATION).increment();
+            notificationPublisher.publish(operationId, userId, ApplicationConstants.EXPORT_OPERATION,
+                    ApplicationConstants.COMPLETED_STATUS, fileName);
         } catch (Exception exception) {
-            meterRegistry.counter("product.import_export.failed", METRIC_OPERATION_TAG, OPERATION).increment();
+            meterRegistry.counter(ApplicationConstants.FAILED_METRIC,
+                    ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.EXPORT_OPERATION).increment();
             deleteQuietly(output);
-            LOGGER.error("Product export {} failed", operationId, exception);
-            notificationPublisher.publish(operationId, userId, OPERATION, "FAILED", null);
+            LOGGER.error(ApplicationConstants.EXPORT_FAILED_LOG, operationId, exception);
+            notificationPublisher.publish(operationId, userId, ApplicationConstants.EXPORT_OPERATION,
+                    ApplicationConstants.FAILED_STATUS, null);
         } finally {
-            sample.stop(Timer.builder("product.import_export.duration")
-                    .description("Duration of product import and export operations")
-                    .tag(METRIC_OPERATION_TAG, OPERATION)
+            sample.stop(Timer.builder(ApplicationConstants.DURATION_METRIC)
+                    .description(ApplicationConstants.OPERATION_DURATION_DESCRIPTION)
+                    .tag(ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.EXPORT_OPERATION)
                     .register(meterRegistry));
         }
     }
@@ -137,11 +146,11 @@ public class ImportExportProductService {
         InventoryCursor inventoryCursor = new InventoryCursor();
         try (BufferedWriter writer = Files.newBufferedWriter(output, StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            writer.write("id,categoryId,name,description,price,tax,uploadingDate,imageUrls,brand,attributes,rating,totalReviews,active,stock");
+            writer.write(ApplicationConstants.CSV_HEADER);
             writer.newLine();
             int offset = 0;
             while (true) {
-                List<Product> products = productRepository.getProductsWithPagination(offset, PAGE_SIZE);
+                List<Product> products = productRepository.getProductsWithPagination(offset, pageSize);
                 if (products.isEmpty()) {
                     break;
                 }
@@ -150,7 +159,7 @@ public class ImportExportProductService {
                     writer.newLine();
                 }
                 offset += products.size();
-                if (products.size() < PAGE_SIZE) {
+                if (products.size() < pageSize) {
                     break;
                 }
             }
@@ -177,7 +186,7 @@ public class ImportExportProductService {
 
         private boolean hasNext() {
             while (pageIndex >= page.size()) {
-                page = inventoryApiClient.getInventories(offset, PAGE_SIZE);
+                page = inventoryApiClient.getInventories(offset, pageSize);
                 pageIndex = 0;
                 if (page == null || page.isEmpty()) {
                     page = List.of();
@@ -220,7 +229,7 @@ public class ImportExportProductService {
         return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 
-    @Scheduled(fixedRateString = "${app.export.cleanup-interval:PT24H}")
+    @Scheduled(fixedRateString = "${app.export.cleanup-interval}")
     public void cleanExportFiles() {
         if (!Files.isDirectory(exportDirectory)) {
             return;
@@ -228,7 +237,8 @@ public class ImportExportProductService {
         try (var files = Files.list(exportDirectory)) {
             files.filter(Files::isRegularFile).forEach(this::deleteQuietly);
         } catch (IOException exception) {
-            LOGGER.error("Unable to clean export directory {}", exportDirectory, exception);
+            LOGGER.error(ApplicationConstants.UNABLE_TO_CLEAN_EXPORT_DIRECTORY_LOG,
+                    exportDirectory, exception);
         }
     }
 
@@ -236,7 +246,7 @@ public class ImportExportProductService {
         try {
             Files.deleteIfExists(path);
         } catch (IOException exception) {
-            LOGGER.warn("Unable to delete {}", path, exception);
+            LOGGER.warn(ApplicationConstants.UNABLE_TO_DELETE_LOG, path, exception);
         }
     }
 }

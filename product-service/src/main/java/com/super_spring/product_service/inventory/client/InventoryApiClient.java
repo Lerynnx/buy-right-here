@@ -7,29 +7,32 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import com.super_spring.product_service.inventory.dto.InventoryDTO;
+import com.super_spring.product_service.config.ApplicationConstants;
 
 @Component
 public class InventoryApiClient {
 
     private final RestClient restClient;
 
-    public InventoryApiClient(RestClient.Builder builder) {
+    public InventoryApiClient(
+            RestClient.Builder builder,
+            @org.springframework.beans.factory.annotation.Value("${app.inventory.base-url}") String baseUrl) {
         this.restClient = builder
-                .baseUrl("http://localhost:8085/")
+                .baseUrl(baseUrl)
                 .build();
     }
 
     public InventoryDTO getInventoryByProductId(Long productId) {
 
         return restClient.get()
-                .uri("/inventory/{productId}", productId)
+                .uri(ApplicationConstants.INVENTORY_PRODUCT_PATH, productId)
                 .retrieve()
                 .body(new ParameterizedTypeReference<InventoryDTO>() {});
     }
 
     public List<InventoryDTO> getAllInventories() {
         return restClient.get()
-                .uri("/inventory")
+                .uri(ApplicationConstants.INVENTORY_PATH)
                 .retrieve()
                 .body(new ParameterizedTypeReference<List<InventoryDTO>>() {});
     }
@@ -37,7 +40,7 @@ public class InventoryApiClient {
     public List<InventoryDTO> getInventories(int offset, int limit) {
         return restClient.get()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/inventory")
+                        .path(ApplicationConstants.INVENTORY_PATH)
                         .queryParam("offset", offset)
                         .queryParam("limit", limit)
                         .build())
@@ -47,7 +50,7 @@ public class InventoryApiClient {
 
     public InventoryDTO createInventory(InventoryDTO inventoryDTO) {
         return restClient.post()
-                .uri("/inventory")
+                .uri(ApplicationConstants.INVENTORY_PATH)
                 .body(inventoryDTO)
                 .retrieve()
                 .body(new ParameterizedTypeReference<InventoryDTO>() {});
@@ -55,7 +58,7 @@ public class InventoryApiClient {
 
     public InventoryDTO updateInventory(Long productId, InventoryDTO inventoryDTO) {
         return restClient.put()
-                .uri("/inventory/{productId}", productId)
+                .uri(ApplicationConstants.INVENTORY_PRODUCT_PATH, productId)
                 .body(inventoryDTO)
                 .retrieve()
                 .body(new ParameterizedTypeReference<InventoryDTO>() {});
@@ -64,7 +67,7 @@ public class InventoryApiClient {
     //For cascading delete when a product is deleted, we can call this method to delete the corresponding inventory.
     public void deleteInventory(Long productId) {
         restClient.delete()
-                .uri("/inventory/{productId}", productId)
+                .uri(ApplicationConstants.INVENTORY_PRODUCT_PATH, productId)
                 .retrieve()
                 .toBodilessEntity();
     }

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.super_spring.product_service.product.dto.ProductDTO;
 import com.super_spring.product_service.product.dto.ExportStartResponse;
@@ -21,42 +22,47 @@ import com.super_spring.product_service.product.entity.Product;
 import com.super_spring.product_service.product.mapper.ProductMapper;
 import com.super_spring.product_service.product.service.ImportExportProductService;
 import com.super_spring.product_service.product.service.ProductService;
+import com.super_spring.product_service.config.ApplicationConstants;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping(ApplicationConstants.PRODUCTS_PATH)
 public class ProductController {
     
     private final ProductService productService;
     private final ImportExportProductService importExportProductService;
     private final ProductMapper productMapper;
+    private final int maxLimit;
 
     public ProductController(
             ProductService productService,
             ImportExportProductService importExportProductService,
-            ProductMapper productMapper) {
+            ProductMapper productMapper,
+            @Value("${app.pagination.max-limit}") int maxLimit) {
         this.productService = productService;
         this.importExportProductService = importExportProductService;
         this.productMapper = productMapper;
+        this.maxLimit = maxLimit;
     }
 
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProductsPaginated(
-            @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = ApplicationConstants.DEFAULT_OFFSET) int offset,
+            @RequestParam(defaultValue = ApplicationConstants.DEFAULT_LIMIT) int limit) {
         if (offset < 0 || limit <= 0) {
             return ResponseEntity.badRequest().build();
-        }else if (limit > 100) {
-            limit = 100; // Cap the limit to 100 to prevent excessive data retrieval
+        } else if (limit > maxLimit) {
+            limit = maxLimit;
         }
         List<ProductDTO> products = productService.getProducts(offset, limit);
         int totalCount = productService.getTotalCount();
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok().header("X-Total-Count", String.valueOf(totalCount)).body(products);
+        return ResponseEntity.ok().header(ApplicationConstants.TOTAL_COUNT_HEADER,
+                String.valueOf(totalCount)).body(products);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(ApplicationConstants.PRODUCT_ID_PATH)
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         if (id <= 0) {
             return ResponseEntity.badRequest().build();
@@ -68,33 +74,37 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('" + ApplicationConstants.ADMIN_ROLE + "', '" +
+            ApplicationConstants.MANAGER_ROLE + "')")
     @PostMapping
     public ResponseEntity<?> createOrUpdateProduct(@RequestBody ProductDTO productDTO) {
         if (productDTO == null) {
-            return ResponseEntity.badRequest().body("Product must not be null");
+            return ResponseEntity.badRequest().body(ApplicationConstants.PRODUCT_MUST_NOT_BE_NULL);
         }
         Product product = productMapper.toEntity(productDTO);
         return ResponseEntity.ok(productService.createOrUpdateProduct(product));
     }
 
-    @GetMapping("/export")
+    @GetMapping(ApplicationConstants.EXPORT_PATH)
     public ResponseEntity<ExportStartResponse> exportProductsToCsv(@AuthenticationPrincipal Jwt jwt) {
         return ResponseEntity.accepted().body(importExportProductService.startExport(jwt.getSubject()));
     }
 
-    @GetMapping("/export/{fileName}")
+    @GetMapping(ApplicationConstants.EXPORT_FILE_PATH)
     public ResponseEntity<Resource> downloadExport(
             @PathVariable String fileName,
             @AuthenticationPrincipal Jwt jwt) {
         return importExportProductService.download(fileName, jwt.getSubject());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @PostMapping("/import")
-    public ResponseEntity<?> importProductsFromCsv(@RequestParam("file") MultipartFile file) {
+    @PreAuthorize("hasAnyRole('" + ApplicationConstants.ADMIN_ROLE + "', '" +
+            ApplicationConstants.MANAGER_ROLE + "')")
+    @PostMapping(ApplicationConstants.IMPORT_PATH)
+    public ResponseEntity<?> importProductsFromCsv(
+            @RequestParam(ApplicationConstants.FILE_REQUEST_PARAM) MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File must not be null or empty");
+            return ResponseEntity.badRequest().body(
+                    ApplicationConstants.FILE_MUST_NOT_BE_NULL_OR_EMPTY);
         }
         return ResponseEntity.accepted().body(importExportProductService.importProductsFromCsv(file));
     }

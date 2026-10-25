@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -30,25 +31,31 @@ public class TaskExecutorConfig {
         };
     };
 
-    @Bean(name = "exportTaskExecutor")
-    public Executor exportTaskExecutor() {
+    @Bean(name = ApplicationConstants.EXPORT_TASK_EXECUTOR)
+    public Executor exportTaskExecutor(
+            @Value("${app.task-executor.core-pool-size}") int corePoolSize,
+            @Value("${app.task-executor.max-pool-size}") int maxPoolSize,
+            @Value("${app.task-executor.queue-capacity}") int queueCapacity) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(500);
-        executor.setThreadNamePrefix("Export-");
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
+        executor.setThreadNamePrefix(ApplicationConstants.EXPORT_THREAD_PREFIX);
         executor.setTaskDecorator(mdcTaskDecorator);
         executor.initialize();
         return executor;
     }
 
-    @Bean(name = "importTaskExecutor")
-    public Executor importTaskExecutor() {
+    @Bean(name = ApplicationConstants.IMPORT_TASK_EXECUTOR)
+    public Executor importTaskExecutor(
+            @Value("${app.task-executor.core-pool-size}") int corePoolSize,
+            @Value("${app.task-executor.max-pool-size}") int maxPoolSize,
+            @Value("${app.task-executor.queue-capacity}") int queueCapacity) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(500);
-        executor.setThreadNamePrefix("Import-");
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
+        executor.setThreadNamePrefix(ApplicationConstants.IMPORT_THREAD_PREFIX);
         executor.setTaskDecorator(mdcTaskDecorator);
         executor.initialize();
         return executor;

@@ -8,6 +8,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import com.super_spring.product_service.config.ApplicationConstants;
 
 @Configuration
 @EnableMethodSecurity
@@ -34,11 +35,12 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/products/export").authenticated()
-                .requestMatchers(HttpMethod.GET, "/products/export/**").authenticated()
-                .requestMatchers(HttpMethod.GET, "/products", "/products/**").permitAll()
-                .requestMatchers("/products/**").authenticated()
+                .requestMatchers(ApplicationConstants.ACTUATOR_PATH).permitAll()
+                .requestMatchers(HttpMethod.GET, ApplicationConstants.EXPORT_PATH).authenticated()
+                .requestMatchers(HttpMethod.GET, ApplicationConstants.EXPORT_FILE_PATH).authenticated()
+                .requestMatchers(HttpMethod.GET, ApplicationConstants.PRODUCTS_PATH,
+                        ApplicationConstants.PRODUCTS_PATH + "/**").permitAll()
+                .requestMatchers(ApplicationConstants.PRODUCTS_PATH + "/**").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth ->

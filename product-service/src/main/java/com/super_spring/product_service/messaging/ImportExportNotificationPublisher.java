@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.super_spring.product_service.config.ApplicationConstants;
 
 @Component
 public class ImportExportNotificationPublisher {
@@ -46,7 +47,7 @@ public class ImportExportNotificationPublisher {
                 status,
                 fileName,
                 Instant.now(),
-                MDC.get("traceId"));
+                MDC.get(ApplicationConstants.TRACE_ID_MDC_KEY));
         final String payload;
         try {
             payload = objectMapper.writeValueAsString(event);
@@ -56,11 +57,11 @@ public class ImportExportNotificationPublisher {
 
         return pulsarTemplate.sendAsync(completionTopic, payload)
                 .thenAccept(messageId -> LOGGER.info(
-                        "Published {} completion notification with status {} to {}",
+                        ApplicationConstants.PUBLISHED_NOTIFICATION_LOG,
                         operationId, status, completionTopic))
                 .whenComplete((ignored, exception) -> {
                     if (exception != null) {
-                        LOGGER.error("Failed to publish {} completion notification to {}",
+                        LOGGER.error(ApplicationConstants.FAILED_NOTIFICATION_LOG,
                                 operationId, completionTopic, exception);
                     }
                 });
