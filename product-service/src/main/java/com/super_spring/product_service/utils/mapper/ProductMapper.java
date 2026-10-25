@@ -15,9 +15,12 @@ public interface ProductMapper {
     @Mapping(target = "stock", ignore = true)
     ProductDTO toDto(Product product);
 
+    @Mapping(target = "id", source = "product.id")
+    @Mapping(target = "active", source = "product.active")
     @Mapping(target = "stock", source = "inventory.stock")
     ProductDTO toDto(Product product, InventoryDTO inventory);
 
-    List<ProductDTO> toDtoList(List<Product> products);
+    Product toEntity(ProductDTO productDTO);
 
+    List<ProductDTO> toDtoList(List<Product> products);
 }

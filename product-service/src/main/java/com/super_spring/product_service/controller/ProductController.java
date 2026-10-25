@@ -18,6 +18,7 @@ import com.super_spring.product_service.entity.Product;
 import com.super_spring.product_service.model.dto.ProductDTO;
 import com.super_spring.product_service.service.ProductService;
 import com.super_spring.product_service.service.ImportExportProductService;
+import com.super_spring.product_service.utils.mapper.ProductMapper;
 
 @RestController
 @RequestMapping("/products")
@@ -25,10 +26,15 @@ public class ProductController {
     
     private final ProductService productService;
     private final ImportExportProductService importExportProductService;
+    private final ProductMapper productMapper;
 
-    public ProductController(ProductService productService, ImportExportProductService importExportProductService) {
+    public ProductController(
+            ProductService productService,
+            ImportExportProductService importExportProductService,
+            ProductMapper productMapper) {
         this.productService = productService;
         this.importExportProductService = importExportProductService;
+        this.productMapper = productMapper;
     }
 
     @GetMapping
@@ -62,10 +68,11 @@ public class ProductController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ResponseEntity<?> createOrUpdateProduct(@RequestBody Product product) {
-        if (product == null) {
+    public ResponseEntity<?> createOrUpdateProduct(@RequestBody ProductDTO productDTO) {
+        if (productDTO == null) {
             return ResponseEntity.badRequest().body("Product must not be null");
         }
+        Product product = productMapper.toEntity(productDTO);
         return ResponseEntity.ok(productService.createOrUpdateProduct(product));
     }
 
