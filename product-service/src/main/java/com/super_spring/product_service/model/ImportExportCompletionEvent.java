@@ -1,4 +1,4 @@
-package com.super_spring.product_service.event;
+package com.super_spring.product_service.model;
 
 import java.time.Instant;
 
