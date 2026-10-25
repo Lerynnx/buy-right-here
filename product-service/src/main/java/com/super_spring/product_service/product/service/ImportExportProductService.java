@@ -219,6 +219,8 @@ public class ImportExportProductService {
     }
 
     private void processImportBatch(List<ImportRecord> records) {
+        meterRegistry.summary(ApplicationConstants.BATCH_SIZE_METRIC).record(records.size());
+        LOGGER.debug("Processing product import batch with {} records", records.size());
         List<Product> products = records.stream().map(ImportRecord::product).toList();
         List<Product> savedProducts = productRepository.saveAll(products);
         List<InventoryDTO> inventories = new ArrayList<>(savedProducts.size());
@@ -404,10 +406,12 @@ public class ImportExportProductService {
     @Scheduled(fixedRateString = "${app.export.cleanup-interval}")
     public void cleanExportFiles() {
         if (!Files.isDirectory(exportDirectory)) {
+            LOGGER.debug("Export directory {} does not exist; skipping cleanup", exportDirectory);
             return;
         }
         try (var files = Files.list(exportDirectory)) {
-            files.filter(Files::isRegularFile).forEach(this::deleteQuietly);
+            long deletedFiles = files.filter(Files::isRegularFile).peek(this::deleteQuietly).count();
+            LOGGER.info("Cleaned {} files from export directory {}", deletedFiles, exportDirectory);
         } catch (IOException exception) {
             LOGGER.error(ApplicationConstants.UNABLE_TO_CLEAN_EXPORT_DIRECTORY_LOG,
                     exportDirectory, exception);

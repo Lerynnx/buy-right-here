@@ -81,6 +81,12 @@ management:
         http:
           server:
             requests: true
+      percentiles:
+        http.server.requests: 0.5,0.9,0.95,0.99
+    enable:
+      process: true
+      system: true
+      jvm: true
 
   # --- Traces with Zipkin (same endpoint and sampling as the Gateway) ---
   zipkin:
@@ -105,4 +111,6 @@ logging:
   level:
     com.super-spring.product: DEBUG
     org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG
+    org.hibernate.SQL: INFO
+    org.springframework.web: INFO
+    org.springframework.pulsar: INFO

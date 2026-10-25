@@ -39,6 +39,19 @@ public final class ApplicationConstants {
     public static final String COMPLETED_METRIC = "product.import_export.completed";
     public static final String FAILED_METRIC = "product.import_export.failed";
     public static final String DURATION_METRIC = "product.import_export.duration";
+    public static final String PRODUCT_OPERATIONS_METRIC = "product.operations";
+    public static final String INVENTORY_CLIENT_REQUESTS_METRIC = "product.inventory.client.requests";
+    public static final String INVENTORY_CLIENT_DURATION_METRIC = "product.inventory.client.duration";
+    public static final String INVENTORY_EVENTS_METRIC = "product.inventory.events";
+    public static final String NOTIFICATION_METRIC = "product.notifications";
+    public static final String BATCH_SIZE_METRIC = "product.import.batch.size";
+    public static final String RESULT_TAG = "result";
+    public static final String SUCCESS_RESULT = "success";
+    public static final String FAILURE_RESULT = "failure";
+    public static final String EVENT_TAG = "event";
+    public static final String EVENT_INVENTORY_UPDATED = "inventory.updated";
+    public static final String METHOD_TAG = "method";
+    public static final String STATUS_TAG = "status";
     public static final String OPERATION_DURATION_DESCRIPTION =
             "Duration of product import and export operations";
     public static final String EXPORT_TASK_EXECUTOR = "exportTaskExecutor";
