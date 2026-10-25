@@ -32,14 +32,19 @@ public class ImportExportNotificationPublisher {
         this.completionTopic = completionTopic;
     }
 
-    public CompletableFuture<Void> publish(String operation, String status) {
+    public CompletableFuture<Void> publish(
+            String operationId,
+            String userId,
+            String operationType,
+            String status,
+            String fileName) {
         ImportExportCompletionEvent event = new ImportExportCompletionEvent(
                 UUID.randomUUID().toString(),
-                operation,
-                null,
-                operation,
+                operationId,
+                userId,
+                operationType,
                 status,
-                null,
+                fileName,
                 Instant.now(),
                 MDC.get("traceId"));
         final String payload;
@@ -52,11 +57,11 @@ public class ImportExportNotificationPublisher {
         return pulsarTemplate.sendAsync(completionTopic, payload)
                 .thenAccept(messageId -> LOGGER.info(
                         "Published {} completion notification with status {} to {}",
-                        operation, status, completionTopic))
+                        operationId, status, completionTopic))
                 .whenComplete((ignored, exception) -> {
                     if (exception != null) {
                         LOGGER.error("Failed to publish {} completion notification to {}",
-                                operation, completionTopic, exception);
+                                operationId, completionTopic, exception);
                     }
                 });
     }

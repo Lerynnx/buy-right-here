@@ -36,6 +36,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/products/export").authenticated()
+                .requestMatchers(HttpMethod.GET, "/products/export/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/products", "/products/**").permitAll()
                 .requestMatchers("/products/**").authenticated()
                 .anyRequest().authenticated()

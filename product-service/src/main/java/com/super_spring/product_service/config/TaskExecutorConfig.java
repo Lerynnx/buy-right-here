@@ -3,6 +3,7 @@ package com.super_spring.product_service.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.slf4j.MDC;
@@ -12,6 +13,7 @@ import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync
+@EnableScheduling
 public class TaskExecutorConfig {
 
     private final TaskDecorator mdcTaskDecorator = runnable -> {

@@ -34,6 +34,17 @@ public class InventoryApiClient {
                 .body(new ParameterizedTypeReference<List<InventoryDTO>>() {});
     }
 
+    public List<InventoryDTO> getInventories(int offset, int limit) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/inventory")
+                        .queryParam("offset", offset)
+                        .queryParam("limit", limit)
+                        .build())
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<InventoryDTO>>() {});
+    }
+
     public InventoryDTO createInventory(InventoryDTO inventoryDTO) {
         return restClient.post()
                 .uri("/inventory")

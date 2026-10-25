@@ -1,9 +1,10 @@
 package com.super_spring.product_service.product.controller;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.super_spring.product_service.product.dto.ProductDTO;
+import com.super_spring.product_service.product.dto.ExportStartResponse;
 import com.super_spring.product_service.product.entity.Product;
 import com.super_spring.product_service.product.mapper.ProductMapper;
 import com.super_spring.product_service.product.service.ImportExportProductService;
@@ -77,8 +79,15 @@ public class ProductController {
     }
 
     @GetMapping("/export")
-    public CompletableFuture<Void> exportProductsToCsv() {
-        return importExportProductService.exportProductsToCsv();
+    public ResponseEntity<ExportStartResponse> exportProductsToCsv(@AuthenticationPrincipal Jwt jwt) {
+        return ResponseEntity.accepted().body(importExportProductService.startExport(jwt.getSubject()));
+    }
+
+    @GetMapping("/export/{fileName}")
+    public ResponseEntity<Resource> downloadExport(
+            @PathVariable String fileName,
+            @AuthenticationPrincipal Jwt jwt) {
+        return importExportProductService.download(fileName, jwt.getSubject());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")

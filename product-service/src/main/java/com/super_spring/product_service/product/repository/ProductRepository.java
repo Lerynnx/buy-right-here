@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long>  {
 
-    @Query(value = "SELECT * FROM products p LIMIT :limit OFFSET :offset", nativeQuery = true)
+    @Query(value = "SELECT * FROM products p ORDER BY p.id LIMIT :limit OFFSET :offset", nativeQuery = true)
     List<Product> getProductsWithPagination(@Param("offset") int offset, @Param("limit") int limit);
     
 }
