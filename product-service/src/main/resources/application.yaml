@@ -41,6 +41,9 @@ spring:
       topic-name: persistent://public/default/product-events
 
 app:
+  export:
+    directory: ${APP_EXPORT_DIRECTORY:./src/main/resources/files}
+    cleanup-interval: ${APP_EXPORT_CLEANUP_INTERVAL:PT24H}
   pulsar:
     import-export-completion-topic: ${PULSAR_IMPORT_EXPORT_COMPLETION_TOPIC:persistent://public/default/product-import-export-completed}
 
