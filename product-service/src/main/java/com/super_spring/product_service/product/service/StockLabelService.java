@@ -2,7 +2,6 @@ package com.super_spring.product_service.product.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Objects;
 
 import com.super_spring.product_service.product.entity.Product;
 import com.super_spring.product_service.product.repository.ProductRepository;
@@ -23,9 +22,7 @@ public class StockLabelService {
             return;
         }
 
-        if (!Objects.equals(stockLabel, product.getStockLabel())) {
-            product.setStockLabel(stockLabel);
-            productRepository.save(product);
-        }
+        product.setStockLabel(stockLabel);
+        productRepository.save(product);
     }
 }
