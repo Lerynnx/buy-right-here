@@ -4,10 +4,10 @@ import java.time.Instant;
 
 public record ImportExportCompletionEvent(
         String eventId,
-        String operationId,
+        String operationId, // Unique identifier for the import/export operation
         String userId,
-        String operationType,
-        String status,
+        String operationType, // "IMPORT" or "EXPORT"
+        String status, // "SUCCESS" or "FAILURE"
         String fileName,
         Instant completedAt,
         String traceId) {
