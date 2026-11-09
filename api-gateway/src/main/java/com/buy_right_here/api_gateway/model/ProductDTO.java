@@ -1,4 +1,4 @@
-package com.super_spring.api_gateway.model;
+package com.buy_right_here.api_gateway.model;
 
 import java.time.Instant;
 import com.fasterxml.jackson.annotation.JsonInclude;

@@ -1,4 +1,4 @@
-package main.java.com.super_spring.api_gateway.model;
+package com.buy_right_here.api_gateway.model;
 
 public record LabelUpdatedEvent(
     long productId,

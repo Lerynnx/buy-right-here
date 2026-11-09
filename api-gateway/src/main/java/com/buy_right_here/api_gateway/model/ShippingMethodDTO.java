@@ -1,4 +1,4 @@
-package com.super_spring.gateway.model;
+package com.buy_right_here.api_gateway.model;
 
 public record ShippingMethodDTO (
     long id,

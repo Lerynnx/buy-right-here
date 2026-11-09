@@ -1,4 +1,4 @@
-package com.super_spring.api_gateway;
+package com.buy_right_here.api_gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
