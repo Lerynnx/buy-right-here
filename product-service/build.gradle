@@ -28,24 +28,24 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-zipkin'
 
-	// --- Base de datos ---
+	// --- Database ---
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	runtimeOnly 'org.postgresql:postgresql'
 
-	// --- Documentación API ---
+	// --- API Documentation ---
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.1.1'
 
-	// --- Observabilidad ---
+	// --- Observability ---
 	runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
-	// --- Lombok + MapStruct (el orden de los annotationProcessor es importante) ---
+	// --- Lombok + MapStruct (the order of annotationProcessors is important) ---
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 	implementation 'org.mapstruct:mapstruct:1.6.3'
 
-	// --- Tests ---
+	// --- Testing ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-flyway-test'
@@ -61,7 +61,7 @@ dependencies {
 	testImplementation 'org.testcontainers:testcontainers-postgresql'
 	testImplementation 'org.testcontainers:testcontainers-pulsar'
 
-	// --- Lombok en tests ---
+	// --- Lombok in tests ---
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 
