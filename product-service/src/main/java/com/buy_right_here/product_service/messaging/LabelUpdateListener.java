@@ -12,19 +12,19 @@ import com.buy_right_here.product_service.config.ApplicationConstants;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.buy_right_here.product_service.inventory.dto.InventoryUpdatedEvent;
+import com.buy_right_here.product_service.inventory.dto.LabelUpdatedEvent;
 import com.buy_right_here.product_service.product.service.StockLabelService;
 
 @Component
-public class InventoryUpdateListener {
+public class LabelUpdateListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(InventoryUpdateListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LabelUpdateListener.class);
 
     private final ObjectMapper objectMapper;
     private final StockLabelService stockLabelService;
     private final MeterRegistry meterRegistry;
 
-    public InventoryUpdateListener(ObjectMapper objectMapper, StockLabelService stockLabelService,
+    public LabelUpdateListener(ObjectMapper objectMapper, StockLabelService stockLabelService,
             MeterRegistry meterRegistry) {
         this.objectMapper = objectMapper;
         this.stockLabelService = stockLabelService;
@@ -37,9 +37,9 @@ public class InventoryUpdateListener {
             subscriptionType = SubscriptionType.Shared)
     public void onInventoryUpdated(String payload) {
         Timer.Sample sample = Timer.start(meterRegistry);
-        final InventoryUpdatedEvent event;
+        final LabelUpdatedEvent event;
         try {
-            event = objectMapper.readValue(payload, InventoryUpdatedEvent.class);
+            event = objectMapper.readValue(payload, LabelUpdatedEvent.class);
         } catch (JsonProcessingException | IllegalArgumentException exception) {
             meterRegistry.counter(ApplicationConstants.INVENTORY_EVENTS_METRIC,
                     ApplicationConstants.EVENT_TAG, ApplicationConstants.EVENT_INVENTORY_UPDATED,
