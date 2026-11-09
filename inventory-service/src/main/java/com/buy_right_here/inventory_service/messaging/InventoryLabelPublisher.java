@@ -4,6 +4,7 @@ import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.pulsar.core.PulsarTemplate;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,8 @@ public class InventoryLabelPublisher {
     }
 
     public CompletableFuture<Void> publish(long productId, String stockLabel) {
-        LabelUpdatedEvent event = new LabelUpdatedEvent(productId, stockLabel);
+        String traceId = MDC.get(ApplicationConstants.TRACE_ID_MDC_KEY);
+        LabelUpdatedEvent event = new LabelUpdatedEvent(productId, stockLabel, traceId);
         final String payload;
         try {
             payload = objectMapper.writeValueAsString(event);
