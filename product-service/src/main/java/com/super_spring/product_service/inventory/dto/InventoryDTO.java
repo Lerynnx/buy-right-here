@@ -1,8 +1,0 @@
-package com.super_spring.product_service.inventory.dto;
-
-public record InventoryDTO (
-    long id,
-    long productId,
-    int stock,
-    boolean isActive
-) {}
