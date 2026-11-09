@@ -1,6 +1,5 @@
 package com.super_spring.inventory_service.inventory.service;
 
-import java.util.Comparator;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -38,8 +37,7 @@ public class InventoryService {
     }
 
     public List<InventoryDTO> getAll(int offset, int limit) {
-        return inventoryRepository.findAllByActiveTrue()
-                .sort(Comparator.comparingLong(Inventory::getProductId))
+        return inventoryRepository.findAllByActiveTrueOrderByProductIdAsc()
                 .skip(offset)
                 .take(limit)
                 .map(inventoryMapper::toDto)

@@ -10,7 +10,7 @@ public interface InventoryRepository extends R2dbcRepository<Inventory, Long> {
 
     Mono<Inventory> findByProductIdAndActiveTrue(long productId);
 
-    Flux<Inventory> findAllByActiveTrue();
+    Flux<Inventory> findAllByActiveTrueOrderByProductIdAsc();
 
     Mono<Inventory> findByProductId(long productId);
 }
