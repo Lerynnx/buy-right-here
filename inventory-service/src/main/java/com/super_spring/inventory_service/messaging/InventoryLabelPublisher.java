@@ -1,12 +1,9 @@
 package com.super_spring.inventory_service.messaging;
 
-import java.time.Instant;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.pulsar.core.PulsarTemplate;
 import org.springframework.stereotype.Component;
@@ -23,63 +20,48 @@ public class InventoryLabelPublisher {
 
     private final PulsarTemplate<String> pulsarTemplate;
     private final ObjectMapper objectMapper;
-    private final String completionTopic;
+    private final String inventoryUpdateTopic;
     private final MeterRegistry meterRegistry;
 
-/*     public ImportExportNotificationPublisher(
+    public InventoryLabelPublisher(
             PulsarTemplate<String> pulsarTemplate,
             ObjectMapper objectMapper,
-            @Value("${app.pulsar.import-export-completion-topic}") String completionTopic,
+            @Value("${app.pulsar.inventory-update-topic}") String inventoryUpdateTopic,
             MeterRegistry meterRegistry) {
         this.pulsarTemplate = pulsarTemplate;
         this.objectMapper = objectMapper;
-        this.completionTopic = completionTopic;
+        this.inventoryUpdateTopic = inventoryUpdateTopic;
         this.meterRegistry = meterRegistry;
     }
 
-    public CompletableFuture<Void> publish(
-            String operationId,
-            String userId,
-            String operationType,
-            String status,
-            String fileName) {
-        ImportExportCompletionEvent event = new ImportExportCompletionEvent(
-                UUID.randomUUID().toString(),
-                operationId,
-                userId,
-                operationType,
-                status,
-                fileName,
-                Instant.now(),
-                MDC.get(ApplicationConstants.TRACE_ID_MDC_KEY));
+    public CompletableFuture<Void> publish(long productId, String stockLabel) {
+        LabelUpdatedEvent event = new LabelUpdatedEvent(productId, stockLabel);
         final String payload;
         try {
             payload = objectMapper.writeValueAsString(event);
         } catch (JsonProcessingException exception) {
-            meterRegistry.counter(ApplicationConstants.NOTIFICATION_METRIC,
-                    ApplicationConstants.METRIC_OPERATION_TAG, operationType,
+            meterRegistry.counter(ApplicationConstants.INVENTORY_EVENTS_METRIC,
+                    ApplicationConstants.EVENT_TAG, ApplicationConstants.EVENT_INVENTORY_UPDATED,
                     ApplicationConstants.RESULT_TAG, ApplicationConstants.FAILURE_RESULT).increment();
-            LOGGER.error("Unable to serialize {} completion notification {}", operationType, operationId,
-                    exception);
+            LOGGER.error("Unable to serialize inventory update for product {}", productId, exception);
             return CompletableFuture.failedFuture(exception);
         }
 
-        return pulsarTemplate.sendAsync(completionTopic, payload)
+        return pulsarTemplate.sendAsync(inventoryUpdateTopic, payload)
                 .thenAccept(messageId -> {
-                    meterRegistry.counter(ApplicationConstants.NOTIFICATION_METRIC,
-                            ApplicationConstants.METRIC_OPERATION_TAG, operationType,
+                    meterRegistry.counter(ApplicationConstants.INVENTORY_EVENTS_METRIC,
+                            ApplicationConstants.EVENT_TAG, ApplicationConstants.EVENT_INVENTORY_UPDATED,
                             ApplicationConstants.RESULT_TAG, ApplicationConstants.SUCCESS_RESULT).increment();
-                    LOGGER.info(ApplicationConstants.PUBLISHED_NOTIFICATION_LOG,
-                            operationId, status, completionTopic);
+                    LOGGER.info("Published inventory update for product {} to {}", productId, inventoryUpdateTopic);
                 })
                 .whenComplete((ignored, exception) -> {
                     if (exception != null) {
-                        meterRegistry.counter(ApplicationConstants.NOTIFICATION_METRIC,
-                                ApplicationConstants.METRIC_OPERATION_TAG, operationType,
+                        meterRegistry.counter(ApplicationConstants.INVENTORY_EVENTS_METRIC,
+                                ApplicationConstants.EVENT_TAG, ApplicationConstants.EVENT_INVENTORY_UPDATED,
                                 ApplicationConstants.RESULT_TAG, ApplicationConstants.FAILURE_RESULT).increment();
-                        LOGGER.error(ApplicationConstants.FAILED_NOTIFICATION_LOG,
-                                operationId, completionTopic, exception);
+                        LOGGER.error("Failed to publish inventory update for product {} to {}",
+                                productId, inventoryUpdateTopic, exception);
                     }
                 });
-    } */
+    }
 }

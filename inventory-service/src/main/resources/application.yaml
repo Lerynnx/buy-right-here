@@ -1,3 +1,10 @@
 spring:
   application:
     name: inventory-service
+  pulsar:
+    client:
+      service-url: ${PULSAR_SERVICE_URL:pulsar://pulsar:6650}
+
+app:
+  pulsar:
+    inventory-update-topic: ${PULSAR_INVENTORY_UPDATE_TOPIC:persistent://public/default/inventory-updated}
