@@ -1,6 +1,20 @@
+server:
+  port: 8085
+
 spring:
   application:
     name: inventory-service
+  r2dbc:
+    url: ${SPRING_R2DBC_URL:r2dbc:postgresql://inventory-db:5432/inventory}
+    username: ${SPRING_R2DBC_USERNAME:inventory}
+    password: ${SPRING_R2DBC_PASSWORD:inventory}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://inventory-db:5432/inventory}
+    username: ${SPRING_DATASOURCE_USERNAME:inventory}
+    password: ${SPRING_DATASOURCE_PASSWORD:inventory}
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   pulsar:
     client:
       service-url: ${PULSAR_SERVICE_URL:pulsar://pulsar:6650}
