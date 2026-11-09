@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service.messaging;
+package com.buy_right_here.inventory_service.messaging;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -11,7 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.super_spring.inventory_service.config.ApplicationConstants;
+import com.buy_right_here.inventory_service.config.ApplicationConstants;
 
 @Component
 public class InventoryLabelPublisher {

@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service.inventory.controller;
+package com.buy_right_here.inventory_service.inventory.controller;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.super_spring.inventory_service.config.ApplicationConstants;
-import com.super_spring.inventory_service.inventory.dto.InventoryDTO;
-import com.super_spring.inventory_service.inventory.service.InventoryService;
+import com.buy_right_here.inventory_service.config.ApplicationConstants;
+import com.buy_right_here.inventory_service.inventory.dto.InventoryDTO;
+import com.buy_right_here.inventory_service.inventory.service.InventoryService;
 
 @RestController
 @RequestMapping(ApplicationConstants.INVENTORY_PATH)

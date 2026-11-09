@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service;
+package com.buy_right_here.inventory_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

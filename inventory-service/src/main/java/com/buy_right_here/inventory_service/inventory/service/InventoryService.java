@@ -1,15 +1,15 @@
-package com.super_spring.inventory_service.inventory.service;
+package com.buy_right_here.inventory_service.inventory.service;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.super_spring.inventory_service.inventory.dto.InventoryDTO;
-import com.super_spring.inventory_service.inventory.entity.Inventory;
-import com.super_spring.inventory_service.mapper.InventoryMapper;
-import com.super_spring.inventory_service.messaging.InventoryLabelPublisher;
-import com.super_spring.inventory_service.repository.InventoryRepository;
+import com.buy_right_here.inventory_service.inventory.dto.InventoryDTO;
+import com.buy_right_here.inventory_service.inventory.entity.Inventory;
+import com.buy_right_here.inventory_service.mapper.InventoryMapper;
+import com.buy_right_here.inventory_service.messaging.InventoryLabelPublisher;
+import com.buy_right_here.inventory_service.repository.InventoryRepository;
 
 @Service
 public class InventoryService {

@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service.config;
+package com.buy_right_here.inventory_service.config;
 
 public final class ApplicationConstants {
 

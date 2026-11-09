@@ -1,10 +1,10 @@
-package com.super_spring.inventory_service.repository;
+package com.buy_right_here.inventory_service.repository;
 
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import com.super_spring.inventory_service.inventory.entity.Inventory;
+import com.buy_right_here.inventory_service.inventory.entity.Inventory;
 
 public interface InventoryRepository extends R2dbcRepository<Inventory, Long> {
 

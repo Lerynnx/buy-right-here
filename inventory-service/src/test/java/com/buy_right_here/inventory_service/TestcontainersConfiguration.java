@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service;
+package com.buy_right_here.inventory_service;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

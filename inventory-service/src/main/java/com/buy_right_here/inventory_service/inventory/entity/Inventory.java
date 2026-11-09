@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service.inventory.entity;
+package com.buy_right_here.inventory_service.inventory.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

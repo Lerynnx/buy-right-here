@@ -1,11 +1,11 @@
-package com.super_spring.inventory_service.mapper;
+package com.buy_right_here.inventory_service.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-import com.super_spring.inventory_service.inventory.dto.InventoryDTO;
-import com.super_spring.inventory_service.inventory.entity.Inventory;
+import com.buy_right_here.inventory_service.inventory.dto.InventoryDTO;
+import com.buy_right_here.inventory_service.inventory.entity.Inventory;
 
 @Mapper(componentModel = "spring")
 public interface InventoryMapper {

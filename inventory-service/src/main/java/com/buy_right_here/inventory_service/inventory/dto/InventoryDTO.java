@@ -1,4 +1,4 @@
-package com.super_spring.inventory_service.inventory.dto;
+package com.buy_right_here.inventory_service.inventory.dto;
 
 public record InventoryDTO (
     long id,
