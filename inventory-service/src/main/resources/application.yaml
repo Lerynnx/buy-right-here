@@ -15,6 +15,11 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://keycloak:8081/realms/tu-realm}
   pulsar:
     client:
       service-url: ${PULSAR_SERVICE_URL:pulsar://pulsar:6650}
@@ -68,3 +73,10 @@ logging:
     org.springframework.r2dbc: INFO
     org.springframework.web: INFO
     org.springframework.pulsar: INFO
+
+# --- OpenAPI / Swagger ---
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
