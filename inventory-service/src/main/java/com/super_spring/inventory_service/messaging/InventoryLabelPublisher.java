@@ -1,4 +1,4 @@
-package com.super_spring.product_service.messaging;
+package com.super_spring.inventory_service.messaging;
 
 import java.time.Instant;
 import java.util.UUID;
