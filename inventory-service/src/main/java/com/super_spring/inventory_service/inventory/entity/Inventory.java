@@ -3,12 +3,18 @@ package com.super_spring.inventory_service.inventory.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data @AllArgsConstructor @NoArgsConstructor
+@Table("inventories")
 public class Inventory {
-    //! I DON'T HAVE TRADITIONAL JAKARTA PERSISTENCE ANNOTATIONS BECAUSE I AM USING A DATA R2DBC
-    private long id;
+    @Id
+    private Long id;
+    @Column("product_id")
     private long productId;
     private int stock;
-    private boolean isActive;
+    @Column("is_active")
+    private boolean active;
 }
