@@ -5,37 +5,37 @@ spring:
   application:
     name: api-gateway
 
-  # --- Seguridad: validación de JWT contra Keycloak ---
+  # --- Security: JWT validation against Keycloak ---
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://keycloak:8081/realms/tu-realm
-          # jwk-set-uri se resuelve automáticamente desde el issuer-uri,
-          # pero puedes fijarlo explícito si lo prefieres:
+          # jwk-set-uri is resolved automatically from issuer-uri,
+          # but you can set it explicitly if preferred:
           # jwk-set-uri: http://keycloak:8081/realms/tu-realm/protocol/openid-connect/certs
 
-  # --- Redis (para rate limiting reactivo) ---
+  # --- Redis (for reactive rate limiting) ---
   data:
     redis:
       host: redis
       port: 6379
-      # password: tu-password   # si aplica
+      # password: your-password   # if applicable
 
-  # --- Spring Cloud api-gateway ---
+  # --- Spring Cloud API Gateway ---
   cloud:
     gateway:
       server:
         webflux:
           discovery:
             locator:
-              enabled: false   # actívalo solo si usas service discovery (Eureka/Consul)
+              enabled: false   # enable only when using service discovery (Eureka/Consul)
 
-          # Filtros globales por defecto para todas las rutas
+          # Default global filters for all routes
           default-filters:
             - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
 
-          # CORS global (ajusta a tu dominio del frontend React)
+          # Global CORS (adjust to your React frontend domain)
           globalcors:
             cors-configurations:
               '[/**]':
@@ -142,7 +142,7 @@ spring:
               predicates:
                 - Path=/api/imp-exp/**
 
-# --- Resilience4j: configuración de los Circuit Breakers ---
+# --- Resilience4j: Circuit Breaker configuration ---
 resilience4j:
   circuitbreaker:
     configs:
@@ -157,7 +157,7 @@ resilience4j:
       default:
         timeout-duration: 4s
 
-# --- Actuator: exposición de endpoints ---
+# --- Actuator: endpoint exposure ---
 management:
   endpoints:
     web:
@@ -182,13 +182,13 @@ management:
           server:
             requests: true
 
-  # --- Trazas con Zipkin ---
+  # --- Tracing with Zipkin ---
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
   tracing:
     sampling:
-      probability: 1.0   # en producción baja esto (ej. 0.1)
+      probability: 1.0   # lower this in production (e.g. 0.1)
 
 logging:
   level:
