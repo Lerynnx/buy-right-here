@@ -1,5 +1,6 @@
 package com.buy_right_here.product_service.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -8,6 +9,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -16,6 +18,16 @@ import java.util.concurrent.Executor;
 @EnableAsync
 @EnableScheduling
 public class TaskExecutorConfig {
+
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+        return RestClient.builder();
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
+    }
 
     private final TaskDecorator mdcTaskDecorator = runnable -> {
         Map<String, String> context = MDC.getCopyOfContextMap();

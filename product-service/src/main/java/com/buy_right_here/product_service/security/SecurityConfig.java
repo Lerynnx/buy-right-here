@@ -36,11 +36,14 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ApplicationConstants.ACTUATOR_PATH).permitAll()
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.GET, ApplicationConstants.EXPORT_PATH).authenticated()
                 .requestMatchers(HttpMethod.GET, ApplicationConstants.EXPORT_FILE_PATH).authenticated()
-                .requestMatchers(HttpMethod.GET, ApplicationConstants.PRODUCTS_PATH,
-                        ApplicationConstants.PRODUCTS_PATH + "/**").permitAll()
-                .requestMatchers(ApplicationConstants.PRODUCTS_PATH + "/**").authenticated()
+                .requestMatchers(request -> {
+                    String path = request.getRequestURI();
+                    return path.equals(ApplicationConstants.PRODUCTS_PATH)
+                        || path.startsWith(ApplicationConstants.PRODUCTS_PATH + "/");
+                }).permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2ResourceServer(oauth ->

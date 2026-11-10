@@ -44,7 +44,7 @@ public class ProductController {
         this.maxLimit = maxLimit;
     }
 
-    @GetMapping
+    @GetMapping({"", "/"})
     public ResponseEntity<List<ProductDTO>> getAllProductsPaginated(
             @RequestParam(defaultValue = ApplicationConstants.DEFAULT_OFFSET) int offset,
             @RequestParam(defaultValue = ApplicationConstants.DEFAULT_LIMIT) int limit) {
