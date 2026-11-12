@@ -33,6 +33,16 @@ spring:
         jwt:
           issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081/realms/buy-right-now}
           jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:http://localhost:8081/realms/buy-right-now/protocol/openid-connect/certs}
+      client:
+        registration:
+          inventory-service:
+            provider: keycloak
+            client-id: ${KEYCLOAK_PRODUCT_SERVICE_CLIENT_ID:product-service}
+            client-secret: ${KEYCLOAK_PRODUCT_SERVICE_CLIENT_SECRET:product-service-dev-secret}
+            authorization-grant-type: client_credentials
+        provider:
+          keycloak:
+            token-uri: ${KEYCLOAK_TOKEN_URI:http://localhost:8081/realms/buy-right-now/protocol/openid-connect/token}
 
   # --- Apache Pulsar: publishing of events (ProductCreated, ProductUpdated...) ---
   pulsar:

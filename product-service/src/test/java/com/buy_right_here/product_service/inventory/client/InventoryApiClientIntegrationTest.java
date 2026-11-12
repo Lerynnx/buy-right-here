@@ -16,6 +16,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.buy_right_here.product_service.inventory.dto.InventoryDTO;
 
@@ -41,7 +50,20 @@ class InventoryApiClientIntegrationTest {
         server.start();
 
         String baseUrl = "http://localhost:" + server.getAddress().getPort();
-        client = new InventoryApiClient(RestClient.builder(), baseUrl);
+        OAuth2AuthorizedClientManager authorizedClientManager = mock(OAuth2AuthorizedClientManager.class);
+        ClientRegistration registration = ClientRegistration.withRegistrationId("inventory-service")
+                .clientId("product-service")
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .tokenUri("http://localhost/token")
+                .build();
+        OAuth2AccessToken accessToken = new OAuth2AccessToken(
+                OAuth2AccessToken.TokenType.BEARER,
+                "test-service-token",
+                java.time.Instant.now(),
+                java.time.Instant.now().plusSeconds(300));
+        when(authorizedClientManager.authorize(any())).thenReturn(
+                new OAuth2AuthorizedClient(registration, "product-service", accessToken));
+        client = new InventoryApiClient(RestClient.builder(), authorizedClientManager, baseUrl);
     }
 
     @AfterEach

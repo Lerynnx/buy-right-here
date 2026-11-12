@@ -109,7 +109,6 @@ public class ProductController {
         }
         return ResponseEntity.accepted().body(importExportProductService.startImport(
                 file,
-                jwt == null ? "system" : jwt.getSubject(),
-                jwt == null ? null : jwt.getTokenValue()));
+                jwt == null ? "system" : jwt.getSubject()));
     }
 }

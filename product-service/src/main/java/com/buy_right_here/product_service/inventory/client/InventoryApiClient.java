@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
+import org.springframework.security.oauth2.client.OAuth2AuthorizeRequest;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.web.client.RestClient;
 
 import com.buy_right_here.product_service.inventory.dto.InventoryDTO;
@@ -13,13 +15,16 @@ import com.buy_right_here.product_service.config.ApplicationConstants;
 public class InventoryApiClient {
 
     private final RestClient restClient;
+    private final OAuth2AuthorizedClientManager authorizedClientManager;
 
     public InventoryApiClient(
             RestClient.Builder builder,
+            OAuth2AuthorizedClientManager authorizedClientManager,
             @org.springframework.beans.factory.annotation.Value("${app.inventory.base-url}") String baseUrl) {
         this.restClient = builder
                 .baseUrl(baseUrl)
                 .build();
+        this.authorizedClientManager = authorizedClientManager;
     }
 
     public InventoryDTO getInventoryByProductId(Long productId) {
@@ -57,18 +62,17 @@ public class InventoryApiClient {
     }
 
     public void createOrUpdateInventories(List<InventoryDTO> inventories, String batchPath) {
-        createOrUpdateInventories(inventories, batchPath, null);
-    }
-
-    public void createOrUpdateInventories(
-            List<InventoryDTO> inventories, String batchPath, String accessToken) {
+        var authorizeRequest = OAuth2AuthorizeRequest
+                .withClientRegistrationId("inventory-service")
+                .principal("product-service")
+                .build();
+        var authorizedClient = authorizedClientManager.authorize(authorizeRequest);
+        if (authorizedClient == null || authorizedClient.getAccessToken() == null) {
+            throw new IllegalStateException("Unable to obtain service token for inventory-service");
+        }
         restClient.post()
                 .uri(batchPath)
-                .headers(headers -> {
-                    if (accessToken != null && !accessToken.isBlank()) {
-                        headers.setBearerAuth(accessToken);
-                    }
-                })
+                .headers(headers -> headers.setBearerAuth(authorizedClient.getAccessToken().getTokenValue()))
                 .body(inventories)
                 .retrieve()
                 .toBodilessEntity();
