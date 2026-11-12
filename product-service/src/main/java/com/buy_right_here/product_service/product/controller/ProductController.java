@@ -108,6 +108,8 @@ public class ProductController {
                     ApplicationConstants.FILE_MUST_NOT_BE_NULL_OR_EMPTY);
         }
         return ResponseEntity.accepted().body(importExportProductService.startImport(
-                file, jwt == null ? "system" : jwt.getSubject()));
+                file,
+                jwt == null ? "system" : jwt.getSubject(),
+                jwt == null ? null : jwt.getTokenValue()));
     }
 }

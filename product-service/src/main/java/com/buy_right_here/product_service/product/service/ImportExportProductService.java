@@ -129,6 +129,10 @@ public class ImportExportProductService {
     }
 
     public ImportStartResponse startImport(MultipartFile file, String userId) {
+        return startImport(file, userId, null);
+    }
+
+    public ImportStartResponse startImport(MultipartFile file, String userId, String accessToken) {
         final byte[] content;
         try {
             content = file.getBytes();
@@ -137,15 +141,16 @@ public class ImportExportProductService {
         }
         String operationId = UUID.randomUUID().toString();
         CompletableFuture.runAsync(
-                () -> executeImport(operationId, userId, file.getOriginalFilename(), content),
+                () -> executeImport(operationId, userId, accessToken, file.getOriginalFilename(), content),
                 importTaskExecutor);
         return new ImportStartResponse(operationId);
     }
 
-    private void executeImport(String operationId, String userId, String fileName, byte[] content) {
+    private void executeImport(
+            String operationId, String userId, String accessToken, String fileName, byte[] content) {
         Timer.Sample sample = Timer.start(meterRegistry);
         try {
-            importCsv(content);
+            importCsv(content, accessToken);
             meterRegistry.counter(ApplicationConstants.COMPLETED_METRIC,
                     ApplicationConstants.METRIC_OPERATION_TAG, ApplicationConstants.IMPORT_OPERATION).increment();
             notificationPublisher.publish(operationId, userId, ApplicationConstants.IMPORT_OPERATION,
@@ -164,7 +169,7 @@ public class ImportExportProductService {
         }
     }
 
-    private void importCsv(byte[] content) throws IOException {
+    private void importCsv(byte[] content, String accessToken) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 new ByteArrayInputStream(content), StandardCharsets.UTF_8))) {
             String header = reader.readLine();
@@ -186,12 +191,12 @@ public class ImportExportProductService {
                     throw new IllegalArgumentException("Invalid CSV row " + rowNumber, exception);
                 }
                 if (batch.size() == importBatchSize) {
-                    processImportBatch(batch);
+                    processImportBatch(batch, accessToken);
                     batch.clear();
                 }
             }
             if (!batch.isEmpty()) {
-                processImportBatch(batch);
+                processImportBatch(batch, accessToken);
             }
         }
     }
@@ -218,7 +223,7 @@ public class ImportExportProductService {
         return new ImportRecord(product, Integer.parseInt(columns.get(13)));
     }
 
-    private void processImportBatch(List<ImportRecord> records) {
+    private void processImportBatch(List<ImportRecord> records, String accessToken) {
         meterRegistry.summary(ApplicationConstants.BATCH_SIZE_METRIC).record(records.size());
         LOGGER.debug("Processing product import batch with {} records", records.size());
         List<Product> products = records.stream().map(ImportRecord::product).toList();
@@ -230,7 +235,7 @@ public class ImportExportProductService {
                     records.get(index).stock(), product.isActive()));
         });
         if (!inventories.isEmpty()) {
-            inventoryApiClient.createOrUpdateInventories(inventories, inventoryBatchPath);
+            inventoryApiClient.createOrUpdateInventories(inventories, inventoryBatchPath, accessToken);
         }
     }
 

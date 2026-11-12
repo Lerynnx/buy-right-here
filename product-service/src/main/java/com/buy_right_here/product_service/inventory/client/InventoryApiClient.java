@@ -57,8 +57,18 @@ public class InventoryApiClient {
     }
 
     public void createOrUpdateInventories(List<InventoryDTO> inventories, String batchPath) {
+        createOrUpdateInventories(inventories, batchPath, null);
+    }
+
+    public void createOrUpdateInventories(
+            List<InventoryDTO> inventories, String batchPath, String accessToken) {
         restClient.post()
                 .uri(batchPath)
+                .headers(headers -> {
+                    if (accessToken != null && !accessToken.isBlank()) {
+                        headers.setBearerAuth(accessToken);
+                    }
+                })
                 .body(inventories)
                 .retrieve()
                 .toBodilessEntity();
