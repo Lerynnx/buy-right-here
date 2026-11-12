@@ -21,6 +21,12 @@
       },
       {
         "name": "MANAGER"
+      },
+      {
+        "name": "CLIENT"
+      },
+      {
+        "name": "ANONYMOUS"
       }
     ]
   },
@@ -31,7 +37,7 @@
       "credentials": [
         {
           "type": "password",
-          "value": "test-admin",
+          "value": "admin",
           "temporary": false
         }
       ],

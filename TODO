@@ -34,12 +34,3 @@ UI user press import button -> gateway -> product service -> import process
 Notify service --> Gateway(SSE) --> UI alert
       |
 Send email to user
-
-
-IMPORTANT NOTES
-- Inventory service MUST return the stocks ORDER BY product.id at exportation calls
-- With Stock, Low Stock, Last Units, Sold Out messages on create or update
-- Inventory can validate if the label stock needs to change and publish the new label, so the product service wouldn't have to do that validation
-
-
-REVISAR LOS DTOs y ENTITYS
