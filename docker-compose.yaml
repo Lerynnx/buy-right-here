@@ -267,6 +267,9 @@ services:
     environment:
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/buy-right-now
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/certs
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/token
+      KEYCLOAK_PRODUCT_SERVICE_CLIENT_ID: product-service
+      KEYCLOAK_PRODUCT_SERVICE_CLIENT_SECRET: ${PRODUCT_SERVICE_CLIENT_SECRET:-product-service-dev-secret}
       MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
