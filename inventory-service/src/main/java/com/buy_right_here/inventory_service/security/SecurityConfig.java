@@ -39,6 +39,8 @@ public class SecurityConfig {
                         .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .pathMatchers(HttpMethod.GET, ApplicationConstants.INVENTORY_PATH,
                                 ApplicationConstants.INVENTORY_PATH + "/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, ApplicationConstants.INVENTORY_BATCH_PATH)
+                        .hasRole(ApplicationConstants.INVENTORY_WRITE_ROLE)
                         .pathMatchers(HttpMethod.POST, ApplicationConstants.INVENTORY_PATH,
                                 ApplicationConstants.INVENTORY_PATH + "/**")
                         .hasAnyRole(ApplicationConstants.ADMIN_ROLE, ApplicationConstants.MANAGER_ROLE)

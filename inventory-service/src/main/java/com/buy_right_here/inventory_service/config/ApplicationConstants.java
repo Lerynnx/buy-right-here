@@ -25,6 +25,7 @@ public final class ApplicationConstants {
 
     public static final String ADMIN_ROLE = "ADMIN";
     public static final String MANAGER_ROLE = "MANAGER";
+    public static final String INVENTORY_WRITE_ROLE = "INVENTORY_WRITE";
     public static final String ROLE_PREFIX = "ROLE_";
     public static final String KEYCLOAK_REALM_ACCESS_CLAIM = "realm_access";
     public static final String KEYCLOAK_ROLES_CLAIM = "roles";
