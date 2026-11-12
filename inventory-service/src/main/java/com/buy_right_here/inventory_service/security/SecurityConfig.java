@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(auth -> auth
                         .pathMatchers(ApplicationConstants.ACTUATOR_PATH).permitAll()
+                        .pathMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .pathMatchers(HttpMethod.GET, ApplicationConstants.INVENTORY_PATH,
                                 ApplicationConstants.INVENTORY_PATH + "/**").permitAll()
                         .pathMatchers(HttpMethod.POST, ApplicationConstants.INVENTORY_PATH,
