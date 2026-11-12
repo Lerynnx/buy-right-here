@@ -19,7 +19,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://keycloak:8081/realms/buy-right-here}
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081/realms/buy-right-now}
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:http://localhost:8081/realms/buy-right-now/protocol/openid-connect/certs}
   pulsar:
     client:
       service-url: ${PULSAR_SERVICE_URL:pulsar://pulsar:6650}
