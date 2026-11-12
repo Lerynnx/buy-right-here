@@ -6,12 +6,31 @@
   "rememberMe": true,
   "clients": [
     {
-      "clientId": "product-service-test",
+      "clientId": "frontend",
       "enabled": true,
       "publicClient": true,
       "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "product-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "product-service-dev-secret",
+      "protocol": "openid-connect",
       "standardFlowEnabled": false,
-      "directAccessGrantsEnabled": true
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
     }
   ],
   "roles": {
@@ -27,6 +46,9 @@
       },
       {
         "name": "ANONYMOUS"
+      },
+      {
+        "name": "INVENTORY_WRITE"
       }
     ]
   },
@@ -43,6 +65,14 @@
       ],
       "realmRoles": [
         "ADMIN"
+      ]
+    },
+    {
+      "username": "service-account-product-service",
+      "enabled": true,
+      "serviceAccountClientId": "product-service",
+      "realmRoles": [
+        "INVENTORY_WRITE"
       ]
     }
   ]
