@@ -20,7 +20,23 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
-      }
+      },
+      "protocolMappers": [
+        {
+          "name": "post-login-redirect-uri",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "post_login_redirect_uri",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "post_login_redirect_uri",
+            "jsonType.label": "String",
+            "multivalued": "false"
+          }
+        }
+      ]
     },
     {
       "clientId": "product-service",
@@ -56,6 +72,14 @@
     {
       "username": "admin",
       "enabled": true,
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "createdTimestamp": 1735689600000,
+      "attributes": {
+        "post_login_redirect_uri": [
+          "http://localhost:8084/swagger-ui.html"
+        ]
+      },
       "credentials": [
         {
           "type": "password",
@@ -65,6 +89,28 @@
       ],
       "realmRoles": [
         "ADMIN"
+      ]
+    },
+    {
+      "username": "manager",
+      "enabled": true,
+      "email": "manager@example.com",
+      "emailVerified": true,
+      "createdTimestamp": 1735689600000,
+      "attributes": {
+        "post_login_redirect_uri": [
+          "http://localhost:8085/swagger-ui.html"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "manager",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "MANAGER"
       ]
     },
     {

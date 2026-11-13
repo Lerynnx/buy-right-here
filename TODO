@@ -34,3 +34,5 @@ UI user press import button -> gateway -> product service -> import process
 Notify service --> Gateway(SSE) --> UI alert
       |
 Send email to user
+
+The redirect URLs on KeyCloak realm file MUST be changed to frontend URLs when frontend is ready
