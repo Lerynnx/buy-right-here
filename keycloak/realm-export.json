@@ -1,5 +1,7 @@
 {
+  "id": "buy-right-now",
   "realm": "buy-right-now",
+  "displayName": "Buy Right Now",
   "enabled": true,
   "registrationAllowed": true,
   "resetPasswordAllowed": true,
@@ -71,13 +73,15 @@
   "users": [
     {
       "username": "admin",
+      "firstName": "Admin",
+      "lastName": "Admin",
       "enabled": true,
       "email": "admin@example.com",
       "emailVerified": true,
       "createdTimestamp": 1735689600000,
       "attributes": {
         "post_login_redirect_uri": [
-          "http://localhost:8084/swagger-ui.html"
+          "http://localhost:3000/index.html"
         ]
       },
       "credentials": [
@@ -93,13 +97,15 @@
     },
     {
       "username": "manager",
+      "firstName": "Manager",
+      "lastName": "Manager",
       "enabled": true,
       "email": "manager@example.com",
       "emailVerified": true,
       "createdTimestamp": 1735689600000,
       "attributes": {
         "post_login_redirect_uri": [
-          "http://localhost:8085/swagger-ui.html"
+          "http://localhost:3000/index.html"
         ]
       },
       "credentials": [
