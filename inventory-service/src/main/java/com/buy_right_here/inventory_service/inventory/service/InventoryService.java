@@ -13,6 +13,9 @@ import com.buy_right_here.inventory_service.mapper.InventoryMapper;
 import com.buy_right_here.inventory_service.messaging.InventoryLabelPublisher;
 import com.buy_right_here.inventory_service.repository.InventoryRepository;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 @Service
 public class InventoryService {
 
@@ -33,85 +36,90 @@ public class InventoryService {
         this.labelPublisher = labelPublisher;
     }
 
-    public InventoryDTO getByProductId(long productId) {
-        InventoryDTO inventory = inventoryRepository.findByProductIdAndActiveTrue(productId)
+    public Mono<InventoryDTO> getByProductId(long productId) {
+        return inventoryRepository.findByProductIdAndActiveTrue(productId)
                 .map(inventoryMapper::toDto)
-                .block();
-        if (inventory == null) {
-            LOGGER.debug("Inventory for product {} was not found", productId);
-        } else {
-            LOGGER.debug("Retrieved inventory for product {}", productId);
-        }
-        return inventory;
+                .doOnNext(inventory -> LOGGER.debug("Retrieved inventory for product {}", productId))
+                .switchIfEmpty(Mono.defer(() -> {
+                    LOGGER.debug("Inventory for product {} was not found", productId);
+                    return Mono.<InventoryDTO>empty();
+                }));
     }
 
-    public List<InventoryDTO> getAll(int offset, int limit) {
-        List<InventoryDTO> inventories = inventoryRepository.findAllByActiveTrueOrderByProductIdAsc()
+    public Flux<InventoryDTO> getAll(int offset, int limit) {
+        return inventoryRepository.findAllByActiveTrueOrderByProductIdAsc()
                 .skip(offset)
                 .take(limit)
                 .map(inventoryMapper::toDto)
-                .collectList()
-                .block();
-        LOGGER.debug("Listed {} inventories with offset {} and limit {}", inventories.size(), offset, limit);
-        return inventories;
+                .doOnComplete(() ->
+                        LOGGER.debug("Listed inventories with offset {} and limit {}", offset, limit));
     }
 
     @Transactional
-    public InventoryDTO create(InventoryDTO dto) {
+    public Mono<InventoryDTO> create(InventoryDTO dto) {
         Inventory inventory = inventoryMapper.toEntity(dto);
         inventory.setId(null);
         inventory.setActive(true);
-        Inventory saved = inventoryRepository.save(inventory).block();
-        publishLabelIfChanged(null, saved);
-        LOGGER.info("Inventory for product {} was created", saved.getProductId());
-        return inventoryMapper.toDto(saved);
+        return inventoryRepository.save(inventory)
+                .doOnNext(saved -> {
+                    publishLabelIfChanged(null, saved);
+                    LOGGER.info("Inventory for product {} was created", saved.getProductId());
+                })
+                .map(inventoryMapper::toDto);
     }
 
     @Transactional
-    public InventoryDTO update(long productId, InventoryDTO dto) {
-        Inventory current = inventoryRepository.findByProductIdAndActiveTrue(productId).block();
-        if (current == null) {
-            LOGGER.debug("Inventory for product {} was not found for update", productId);
-            return null;
-        }
-
-        String oldLabel = stockLabel(current.getStock());
-        current.setStock(dto.stock());
-        current.setActive(true);
-        Inventory saved = inventoryRepository.save(current).block();
-        publishLabelIfChanged(oldLabel, saved);
-        LOGGER.info("Inventory for product {} was updated", productId);
-        return inventoryMapper.toDto(saved);
+    public Mono<InventoryDTO> update(long productId, InventoryDTO dto) {
+        return inventoryRepository.findByProductIdAndActiveTrue(productId)
+                .flatMap(current -> {
+                    String oldLabel = stockLabel(current.getStock());
+                    current.setStock(dto.stock());
+                    current.setActive(true);
+                    return inventoryRepository.save(current)
+                            .doOnNext(saved -> {
+                                publishLabelIfChanged(oldLabel, saved);
+                                LOGGER.info("Inventory for product {} was updated", productId);
+                            })
+                            .map(inventoryMapper::toDto);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    LOGGER.debug("Inventory for product {} was not found for update", productId);
+                    return Mono.<InventoryDTO>empty();
+                }));
     }
 
     @Transactional
-    public void createOrUpdateBatch(List<InventoryDTO> dtos) {
+    public Mono<Void> createOrUpdateBatch(List<InventoryDTO> dtos) {
         LOGGER.debug("Processing inventory batch with {} records", dtos.size());
-        for (InventoryDTO dto : dtos) {
-            Inventory current = inventoryRepository.findByProductId(dto.productId()).block();
-            if (current == null) {
-                create(dto);
-            } else {
-                String oldLabel = current.isActive() ? stockLabel(current.getStock()) : null;
-                current.setStock(dto.stock());
-                current.setActive(true);
-                Inventory saved = inventoryRepository.save(current).block();
-                publishLabelIfChanged(oldLabel, saved);
-            }
-        }
+        return Flux.fromIterable(dtos)
+                .concatMap(dto -> inventoryRepository.findByProductId(dto.productId())
+                        .flatMap(current -> {
+                            String oldLabel = current.isActive() ? stockLabel(current.getStock()) : null;
+                            current.setStock(dto.stock());
+                            current.setActive(true);
+                            return inventoryRepository.save(current)
+                                    .doOnNext(saved -> publishLabelIfChanged(oldLabel, saved))
+                                    .then();
+                        })
+                        .switchIfEmpty(create(dto).then()))
+                .then();
     }
 
     @Transactional
-    public boolean deleteLogically(long productId) {
-        Inventory current = inventoryRepository.findByProductIdAndActiveTrue(productId).block();
-        if (current == null) {
-            LOGGER.debug("Inventory for product {} was not found for deletion", productId);
-            return false;
-        }
-        current.setActive(false);
-        inventoryRepository.save(current).block();
-        LOGGER.info("Inventory for product {} was deleted", productId);
-        return true;
+    public Mono<Boolean> deleteLogically(long productId) {
+        return inventoryRepository.findByProductIdAndActiveTrue(productId)
+                .flatMap(current -> {
+                    current.setActive(false);
+                    return inventoryRepository.save(current)
+                            .doOnNext(saved -> LOGGER.info("Inventory for product {} was deleted", productId))
+                            .thenReturn(true);
+                })
+                .defaultIfEmpty(false)
+                .doOnNext(deleted -> {
+                    if (!deleted) {
+                        LOGGER.debug("Inventory for product {} was not found for deletion", productId);
+                    }
+                });
     }
 
     private void publishLabelIfChanged(String oldLabel, Inventory inventory) {

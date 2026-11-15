@@ -11,6 +11,8 @@ public final class ApplicationConstants {
     public static final String INVENTORY_PATH = "/inventory";
     public static final String INVENTORY_BATCH_PATH = "/inventory/batch";
     public static final String INVENTORY_PRODUCT_PATH = "/inventory/{productId}";
+    public static final String INVENTORY_BATCH_SUBPATH = "/batch";
+    public static final String INVENTORY_PRODUCT_SUBPATH = "/{productId}";
     public static final String TOTAL_COUNT_HEADER = "X-Total-Count";
     public static final String CONTENT_DISPOSITION_HEADER = "Content-Disposition";
     public static final String ATTACHMENT_CONTENT_DISPOSITION = "attachment; filename=\"";

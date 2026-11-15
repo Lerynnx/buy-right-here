@@ -17,6 +17,9 @@ import org.springframework.http.HttpStatus;
 import com.buy_right_here.inventory_service.inventory.dto.InventoryDTO;
 import com.buy_right_here.inventory_service.inventory.service.InventoryService;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 @ExtendWith(MockitoExtension.class)
 class InventoryControllerTest {
 
@@ -32,24 +35,24 @@ class InventoryControllerTest {
 
     @Test
     void rejectsInvalidProductId() {
-        assertEquals(HttpStatus.BAD_REQUEST, controller.getByProductId(0).getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, controller.getByProductId(0).block().getStatusCode());
 
         verifyNoInteractions(inventoryService);
     }
 
     @Test
     void returnsNoContentWhenInventoryListIsEmpty() {
-        when(inventoryService.getAll(0, 10)).thenReturn(List.of());
+        when(inventoryService.getAll(0, 10)).thenReturn(Flux.empty());
 
-        assertEquals(HttpStatus.NO_CONTENT, controller.getInventories(0, 10).getStatusCode());
+        assertEquals(HttpStatus.NO_CONTENT, controller.getInventories(0, 10).block().getStatusCode());
     }
 
     @Test
     void createsValidInventory() {
         InventoryDTO input = new InventoryDTO(0, 7, 12, true);
-        when(inventoryService.create(input)).thenReturn(new InventoryDTO(1, 7, 12, true));
+        when(inventoryService.create(input)).thenReturn(Mono.just(new InventoryDTO(1, 7, 12, true)));
 
-        var response = controller.create(input);
+        var response = controller.create(input).block();
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals(1, response.getBody().id());
@@ -58,7 +61,7 @@ class InventoryControllerTest {
 
     @Test
     void rejectsInvalidBatch() {
-        var response = controller.createOrUpdateBatch(List.of(new InventoryDTO(0, 7, -1, true)));
+        var response = controller.createOrUpdateBatch(List.of(new InventoryDTO(0, 7, -1, true))).block();
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verifyNoInteractions(inventoryService);
@@ -66,8 +69,8 @@ class InventoryControllerTest {
 
     @Test
     void returnsNotFoundWhenDeleteTargetDoesNotExist() {
-        when(inventoryService.deleteLogically(7)).thenReturn(false);
+        when(inventoryService.deleteLogically(7)).thenReturn(reactor.core.publisher.Mono.just(false));
 
-        assertEquals(HttpStatus.NOT_FOUND, controller.delete(7).getStatusCode());
+        assertEquals(HttpStatus.NOT_FOUND, controller.delete(7).block().getStatusCode());
     }
 }

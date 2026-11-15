@@ -19,6 +19,8 @@ import com.buy_right_here.inventory_service.config.ApplicationConstants;
 import com.buy_right_here.inventory_service.inventory.dto.InventoryDTO;
 import com.buy_right_here.inventory_service.inventory.service.InventoryService;
 
+import reactor.core.publisher.Mono;
+
 @RestController
 @RequestMapping(ApplicationConstants.INVENTORY_PATH)
 public class InventoryController {
@@ -30,68 +32,75 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    @GetMapping(ApplicationConstants.INVENTORY_PRODUCT_PATH)
-    public ResponseEntity<InventoryDTO> getByProductId(@PathVariable long productId) {
+    @GetMapping(ApplicationConstants.INVENTORY_PRODUCT_SUBPATH)
+    public Mono<ResponseEntity<InventoryDTO>> getByProductId(@PathVariable long productId) {
         if (productId <= 0) {
             LOGGER.debug("Rejected inventory lookup with invalid product id {}", productId);
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.<InventoryDTO>badRequest().build());
         }
-        InventoryDTO inventory = inventoryService.getByProductId(productId);
-        return inventory == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(inventory);
+        return inventoryService.getByProductId(productId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.<InventoryDTO>notFound().build());
     }
 
     @GetMapping
-    public ResponseEntity<List<InventoryDTO>> getInventories(
+    public Mono<ResponseEntity<List<InventoryDTO>>> getInventories(
             @RequestParam(defaultValue = ApplicationConstants.DEFAULT_OFFSET) int offset,
             @RequestParam(defaultValue = ApplicationConstants.DEFAULT_LIMIT) int limit) {
         if (offset < 0 || limit <= 0) {
             LOGGER.debug("Rejected inventory list with invalid pagination offset {} and limit {}", offset, limit);
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.<List<InventoryDTO>>badRequest().build());
         }
-        List<InventoryDTO> inventories = inventoryService.getAll(offset, limit);
-        return inventories.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(inventories);
+        return inventoryService.getAll(offset, limit)
+                .collectList()
+                .map(inventories -> inventories.isEmpty()
+                        ? ResponseEntity.<List<InventoryDTO>>noContent().build()
+                        : ResponseEntity.ok(inventories));
     }
 
     @PostMapping
-    public ResponseEntity<InventoryDTO> create(@RequestBody InventoryDTO inventory) {
+    public Mono<ResponseEntity<InventoryDTO>> create(@RequestBody InventoryDTO inventory) {
         if (inventory == null || inventory.productId() <= 0 || inventory.stock() < 0) {
             LOGGER.debug("Rejected invalid inventory creation request");
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.<InventoryDTO>badRequest().build());
         }
-        return ResponseEntity.status(201).body(inventoryService.create(inventory));
+        return inventoryService.create(inventory)
+                .map(created -> ResponseEntity.status(201).body(created));
     }
 
-    @PutMapping(ApplicationConstants.INVENTORY_PRODUCT_PATH)
-    public ResponseEntity<InventoryDTO> update(
+    @PutMapping(ApplicationConstants.INVENTORY_PRODUCT_SUBPATH)
+    public Mono<ResponseEntity<InventoryDTO>> update(
             @PathVariable long productId,
             @RequestBody InventoryDTO inventory) {
         if (productId <= 0 || inventory == null || inventory.stock() < 0) {
             LOGGER.debug("Rejected invalid inventory update request for product {}", productId);
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.<InventoryDTO>badRequest().build());
         }
-        InventoryDTO updated = inventoryService.update(productId, inventory);
-        return updated == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(updated);
+        return inventoryService.update(productId, inventory)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.<InventoryDTO>notFound().build());
     }
 
-    @PostMapping(ApplicationConstants.INVENTORY_BATCH_PATH)
-    public ResponseEntity<Void> createOrUpdateBatch(@RequestBody List<InventoryDTO> inventories) {
+    @PostMapping(ApplicationConstants.INVENTORY_BATCH_SUBPATH)
+    public Mono<ResponseEntity<Void>> createOrUpdateBatch(@RequestBody List<InventoryDTO> inventories) {
         if (inventories == null || inventories.stream().anyMatch(inventory ->
                 inventory == null || inventory.productId() <= 0 || inventory.stock() < 0)) {
             LOGGER.debug("Rejected invalid inventory batch request");
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.<Void>badRequest().build());
         }
-        inventoryService.createOrUpdateBatch(inventories);
-        return ResponseEntity.noContent().build();
+        return inventoryService.createOrUpdateBatch(inventories)
+                .thenReturn(ResponseEntity.<Void>noContent().build());
     }
 
-    @DeleteMapping(ApplicationConstants.INVENTORY_PRODUCT_PATH)
-    public ResponseEntity<Void> delete(@PathVariable long productId) {
+    @DeleteMapping(ApplicationConstants.INVENTORY_PRODUCT_SUBPATH)
+    public Mono<ResponseEntity<Void>> delete(@PathVariable long productId) {
         if (productId <= 0) {
             LOGGER.debug("Rejected inventory deletion with invalid product id {}", productId);
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.<Void>badRequest().build());
         }
         return inventoryService.deleteLogically(productId)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+                .map(deleted -> deleted
+                        ? ResponseEntity.<Void>noContent().build()
+                        : ResponseEntity.<Void>notFound().build());
     }
 }

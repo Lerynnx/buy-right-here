@@ -52,7 +52,7 @@ class InventoryServiceTest {
         when(inventoryRepository.findAllByActiveTrueOrderByProductIdAsc()).thenReturn(Flux.just(first, second));
         when(inventoryMapper.toDto(second)).thenReturn(dto(2, 2, 5, true));
 
-        List<InventoryDTO> result = inventoryService.getAll(1, 1);
+        List<InventoryDTO> result = inventoryService.getAll(1, 1).collectList().block();
 
         assertEquals(List.of(dto(2, 2, 5, true)), result);
     }
@@ -67,7 +67,7 @@ class InventoryServiceTest {
         when(inventoryRepository.save(entity)).thenReturn(Mono.just(saved));
         when(inventoryMapper.toDto(saved)).thenReturn(expected);
 
-        InventoryDTO result = inventoryService.create(input);
+        InventoryDTO result = inventoryService.create(input).block();
 
         assertEquals(expected, result);
         assertNull(entity.getId());
@@ -79,7 +79,7 @@ class InventoryServiceTest {
     void updateReturnsNullWhenProductDoesNotExist() {
         when(inventoryRepository.findByProductIdAndActiveTrue(7L)).thenReturn(Mono.empty());
 
-        assertNull(inventoryService.update(7L, dto(0, 7, 10, true)));
+        assertNull(inventoryService.update(7L, dto(0, 7, 10, true)).block());
 
         verifyNoInteractions(labelPublisher);
     }
@@ -93,7 +93,7 @@ class InventoryServiceTest {
         when(inventoryRepository.save(current)).thenReturn(Mono.just(current));
         when(inventoryMapper.toDto(current)).thenReturn(expected);
 
-        assertEquals(expected, inventoryService.update(7L, input));
+        assertEquals(expected, inventoryService.update(7L, input).block());
 
         verify(labelPublisher).publish(7L, "Low Stock");
         assertEquals(8, current.getStock());
@@ -105,7 +105,7 @@ class InventoryServiceTest {
         when(inventoryRepository.findByProductIdAndActiveTrue(7L)).thenReturn(Mono.just(current));
         when(inventoryRepository.save(current)).thenReturn(Mono.just(current));
 
-        assertTrue(inventoryService.deleteLogically(7L));
+        assertTrue(inventoryService.deleteLogically(7L).block());
 
         assertFalse(current.isActive());
         verify(inventoryRepository).save(current);
