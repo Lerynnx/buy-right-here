@@ -1,0 +1,115 @@
+{
+  "id": "buy-right-now",
+  "realm": "buy-right-now",
+  "displayName": "Buy Right Now",
+  "enabled": true,
+  "registrationAllowed": true,
+  "resetPasswordAllowed": true,
+  "rememberMe": true,
+  "clients": [
+    {
+      "clientId": "frontend",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "product-service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "product-service-dev-secret",
+      "protocol": "openid-connect",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN"
+      },
+      {
+        "name": "MANAGER"
+      },
+      {
+        "name": "CLIENT"
+      },
+      {
+        "name": "ANONYMOUS"
+      },
+      {
+        "name": "INVENTORY_WRITE"
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "admin",
+      "firstName": "Admin",
+      "lastName": "Admin",
+      "enabled": true,
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "createdTimestamp": 1735689600000,
+      "attributes": {
+        "post_login_redirect_uri": [
+          "http://localhost:3000/index.html"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "username": "manager",
+      "firstName": "Manager",
+      "lastName": "Manager",
+      "enabled": true,
+      "email": "manager@example.com",
+      "emailVerified": true,
+      "createdTimestamp": 1735689600000,
+      "attributes": {
+        "post_login_redirect_uri": [
+          "http://localhost:3000/index.html"
+        ]
+      },
+      "credentials": [
+        {
+          "type": "password",
+          "value": "manager",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "MANAGER"
+      ]
+    },
+    {
+      "username": "service-account-product-service",
+      "enabled": true,
+      "serviceAccountClientId": "product-service",
+      "realmRoles": [
+        "INVENTORY_WRITE"
+      ]
+    }
+  ]
+}
