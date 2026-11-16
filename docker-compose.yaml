@@ -173,6 +173,22 @@ services:
       - ecommerce-net
 
   # ---------------------------------------------------
+  # Frontend
+  # ---------------------------------------------------
+  frontend:
+    build:
+      context: ./front-buy-right-here
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
   # Business Microservices (template — uncomment and adjust when they exist) 
   # ---------------------------------------------------
   #// user-service:
