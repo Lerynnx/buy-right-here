@@ -1,4 +1,11 @@
-FROM eclipse-temurin:27-jre-alpine
+FROM eclipse-temurin:25-jdk AS build
+
+WORKDIR /workspace
+COPY . .
+RUN ./gradlew bootJar --no-daemon
+
+FROM eclipse-temurin:25-jre
+
 WORKDIR /app
-COPY target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+COPY --from=build /workspace/build/libs/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
