@@ -10,10 +10,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak:8081/realms/tu-realm
-          # jwk-set-uri is resolved automatically from issuer-uri,
-          # but you can set it explicitly if preferred:
-          # jwk-set-uri: http://keycloak:8081/realms/tu-realm/protocol/openid-connect/certs
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081/realms/buy-right-now}
 
   # --- Redis (for reactive rate limiting) ---
   data:
@@ -41,6 +38,7 @@ spring:
               '[/**]':
                 allowedOrigins:
                   - "http://localhost:3000"
+                  - "http://localhost:5173"
                 allowedMethods:
                   - GET
                   - POST
@@ -52,95 +50,19 @@ spring:
                 allowCredentials: true
 
           routes:
-            # - id: user-service
-            #   uri: http://localhost:8082
-            #   predicates:
-            #     - Path=/api/users/**
-            #   filters:
-            #     - name: CircuitBreaker
-            #       args:
-            #         name: userCB
-            #         fallbackUri: forward:/fallback/users
-            #     - name: RequestRateLimiter
-            #       args:
-            #         redis-rate-limiter.replenishRate: 10
-            #         redis-rate-limiter.burstCapacity: 20
-            #         redis-rate-limiter.requestedTokens: 1
-
-            - id: cart-service
-              uri: http://localhost:8083
-              predicates:
-                - Path=/api/cart/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: cartCB
-                    fallbackUri: forward:/fallback/cart
-
             - id: product-service
-              uri: http://localhost:8084
+              uri: ${PRODUCT_SERVICE_URL:http://localhost:8084}
               predicates:
-                - Path=/api/products/**
+                - Path=/api/products,/api/products/**
               filters:
-                - name: CircuitBreaker
-                  args:
-                    name: productCB
-                    fallbackUri: forward:/fallback/products
-
-            - id: search-service
-              uri: http://localhost:8085
-              predicates:
-                - Path=/api/search/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: searchCB
-                    fallbackUri: forward:/fallback/search
+                - StripPrefix=1
 
             - id: inventory-service
-              uri: http://localhost:8086
+              uri: ${INVENTORY_SERVICE_URL:http://localhost:8085}
               predicates:
-                - Path=/api/inventory/**
+                - Path=/api/inventory,/api/inventory/**
               filters:
-                - name: CircuitBreaker
-                  args:
-                    name: inventoryCB
-                    fallbackUri: forward:/fallback/inventory
-
-            - id: order-service
-              uri: http://localhost:8087
-              predicates:
-                - Path=/api/orders/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: orderCB
-                    fallbackUri: forward:/fallback/orders
-
-            - id: payment-service
-              uri: http://localhost:8088
-              predicates:
-                - Path=/api/payments/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: paymentCB
-                    fallbackUri: forward:/fallback/payments
-
-            - id: notification-service
-              uri: http://localhost:8089
-              predicates:
-                - Path=/api/notifications/**
-              filters:
-                - name: CircuitBreaker
-                  args:
-                    name: notificationCB
-                    fallbackUri: forward:/fallback/notifications
-
-            - id: import-export-service
-              uri: http://localhost:8090
-              predicates:
-                - Path=/api/imp-exp/**
+                - StripPrefix=1
 
 # --- Resilience4j: Circuit Breaker configuration ---
 resilience4j:
@@ -192,6 +114,5 @@ management:
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.security: DEBUG
-    reactor.netty.http.client: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
