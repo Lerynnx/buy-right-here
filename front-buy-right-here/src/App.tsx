@@ -1,121 +1,141 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useCallback, useEffect, useState } from 'react'
+import Keycloak from 'keycloak-js'
 import './App.css'
 
+type Product = {
+  id: number
+  name: string
+  description: string
+  price: number
+  stock: number | null
+  imageUrls?: string[]
+  brand?: string
+  rating?: number
+}
+
+const keycloak = new Keycloak({
+  url: import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8081',
+  realm: import.meta.env.VITE_KEYCLOAK_REALM ?? 'buy-right-now',
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? 'frontend',
+})
+
+const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [authenticated, setAuthenticated] = useState(false)
+
+  const loadProducts = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${apiUrl}/products?offset=0&limit=50`, {
+        headers: keycloak.token
+          ? { Authorization: `Bearer ${keycloak.token}` }
+          : undefined,
+      })
+      if (response.status === 204) {
+        setProducts([])
+        return
+      }
+      if (!response.ok) {
+        throw new Error(`No se pudieron cargar los productos (${response.status})`)
+      }
+      setProducts((await response.json()) as Product[])
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Error desconocido')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void keycloak
+      .init({ onLoad: 'check-sso', pkceMethod: 'S256', checkLoginIframe: false })
+      .then((isAuthenticated) => {
+        setAuthenticated(isAuthenticated)
+        void loadProducts()
+      })
+      .catch(() => {
+        setError('No se pudo inicializar la sesión de Keycloak')
+        setLoading(false)
+      })
+  }, [loadProducts])
+
+  const login = () => {
+    void keycloak.login({ redirectUri: window.location.href })
+  }
+
+  const logout = () => {
+    void keycloak.logout({ redirectUri: window.location.origin })
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <main className="storefront">
+      <header className="site-header">
+        <a className="brand" href="/">buy right here</a>
+        <div className="header-actions">
+          <span className="cart-summary">Tu tienda online</span>
+          {authenticated ? (
+            <button className="button button-outline" onClick={logout}>Cerrar sesión</button>
+          ) : (
+            <button className="button button-primary" onClick={login}>Iniciar sesión</button>
+          )}
         </div>
+      </header>
+
+      <section className="hero-banner">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+          <p className="eyebrow">Compra mejor</p>
+          <h1>Productos elegidos para ti.</h1>
+          <p className="hero-copy">Descubre una selección sencilla, clara y lista para llegar a tu casa.</p>
         </div>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <section className="catalog" aria-labelledby="catalog-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Catálogo</p>
+            <h2 id="catalog-title">Nuestros productos</h2>
+          </div>
+          {!loading && !error && <span className="product-count">{products.length} productos</span>}
+        </div>
+
+        {loading && <p className="status-message">Cargando productos...</p>}
+        {error && <p className="status-message status-error" role="alert">{error}</p>}
+        {!loading && !error && products.length === 0 && (
+          <p className="status-message">No hay productos disponibles ahora mismo.</p>
+        )}
+        {!loading && !error && products.length > 0 && (
+          <div className="product-grid">
+            {products.map((product) => (
+              <article className="product-card" key={product.id}>
+                <div className="product-image">
+                  {product.imageUrls?.[0] ? (
+                    <img src={product.imageUrls[0]} alt={product.name} />
+                  ) : (
+                    <span>{product.name.slice(0, 1).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="product-info">
+                  {product.brand && <p className="product-brand">{product.brand}</p>}
+                  <h3>{product.name}</h3>
+                  <p className="product-description">{product.description}</p>
+                  <div className="product-footer">
+                    <strong>{product.price.toFixed(2)} €</strong>
+                    <span className={product.stock === 0 ? 'out-of-stock' : 'in-stock'}>
+                      {product.stock === 0 ? 'Agotado' : 'Disponible'}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
   )
 }
 
