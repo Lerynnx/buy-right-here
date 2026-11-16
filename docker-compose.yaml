@@ -147,28 +147,30 @@ services:
   # ---------------------------------------------------
   # API Gateway
   # ---------------------------------------------------
-  # api-gateway:
-  #   build:
-  #     context: ./api-gateway
-  #     dockerfile: Dockerfile
-  #   container_name: api-gateway
-  #   restart: unless-stopped
-  #   environment:
-  #     SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/buy-right-now
-  #     SPRING_DATA_REDIS_HOST: redis
-  #     SPRING_DATA_REDIS_PORT: 6379
-  #     MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
-  #     # The microservices URIs are overridden here instead of in the YAML,
-  #     # so the gateway points to the Docker service name instead of localhost.
-  #     # (Requires externalizing them in application.yml, see note below)
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - keycloak
-  #     - redis
-  #     - zipkin
-  #   networks:
-  #     - ecommerce-net
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/buy-right-now
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/certs
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      PRODUCT_SERVICE_URL: http://product-service:8084
+      INVENTORY_SERVICE_URL: http://inventory-service:8085
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak
+      - redis
+      - product-service
+      - inventory-service
+      - zipkin
+    networks:
+      - ecommerce-net
 
   # ---------------------------------------------------
   # Business Microservices (template — uncomment and adjust when they exist) 
