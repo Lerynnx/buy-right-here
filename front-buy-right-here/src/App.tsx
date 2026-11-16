@@ -19,7 +19,7 @@ const keycloak = new Keycloak({
   clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID ?? 'frontend',
 })
 
-const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api'
+const apiUrl = import.meta.env.VITE_API_URL ?? '/api'
 
 function App() {
   const [products, setProducts] = useState<Product[]>([])

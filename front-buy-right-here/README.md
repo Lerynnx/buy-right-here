@@ -1,5 +1,20 @@
 # React + TypeScript + Vite
 
+## Ejecutar con Docker
+
+Desde la raíz del proyecto:
+
+```bash
+docker compose up --build
+```
+
+La aplicación estará disponible en `http://localhost:3000`. El frontend sirve `/api`
+mediante Nginx hacia el contenedor `api-gateway`, mientras que Keycloak sigue siendo
+accesible desde el navegador en `http://localhost:8081`.
+
+Para desarrollo local, `pnpm dev` mantiene el mismo contrato: Vite proxifica `/api`
+hacia `http://localhost:8080`.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:
