@@ -22,7 +22,23 @@
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
-      }
+      },
+      "protocolMappers": [
+        {
+          "name": "post-login-redirect-uri",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "userinfo.token.claim": "true",
+            "user.attribute": "post_login_redirect_uri",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "post_login_redirect_uri",
+            "jsonType.label": "String",
+            "multivalued": "false"
+          }
+        }
+      ]
     },
     {
       "clientId": "product-service",
