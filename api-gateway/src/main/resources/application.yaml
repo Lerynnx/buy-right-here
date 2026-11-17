@@ -1,0 +1,118 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  # --- Security: JWT validation against Keycloak ---
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:http://localhost:8081/realms/buy-right-now}
+
+  # --- Redis (for reactive rate limiting) ---
+  data:
+    redis:
+      host: redis
+      port: 6379
+      # password: your-password   # if applicable
+
+  # --- Spring Cloud API Gateway ---
+  cloud:
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false   # enable only when using service discovery (Eureka/Consul)
+
+          # Default global filters for all routes
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+          # Global CORS (adjust to your React frontend domain)
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:3000"
+                  - "http://localhost:5173"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - PATCH
+                  - OPTIONS
+                allowedHeaders: "*"
+                allowCredentials: true
+
+          routes:
+            - id: product-service
+              uri: ${PRODUCT_SERVICE_URL:http://localhost:8084}
+              predicates:
+                - Path=/api/products,/api/products/**
+              filters:
+                - StripPrefix=1
+
+            - id: inventory-service
+              uri: ${INVENTORY_SERVICE_URL:http://localhost:8085}
+              predicates:
+                - Path=/api/inventory,/api/inventory/**
+              filters:
+                - StripPrefix=1
+
+# --- Resilience4j: Circuit Breaker configuration ---
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 4s
+
+# --- Actuator: endpoint exposure ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true   # enables /actuator/health/liveness and /readiness for k8s
+  health:
+    livenessstate: 
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+
+  # --- Tracing with Zipkin ---
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  tracing:
+    sampling:
+      probability: 1.0   # lower this in production (e.g. 0.1)
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO

@@ -1,0 +1,323 @@
+networks:
+  ecommerce-net:
+    driver: bridge
+
+volumes:
+  keycloak-db-data:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+
+services:
+
+  # ---------------------------------------------------
+  # Keycloak DB
+  # ---------------------------------------------------
+  keycloak-db:
+    image: postgres:16
+    container_name: keycloak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------
+  # Keycloak (Auth Server)
+  # ---------------------------------------------------
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    command: start-dev --import-realm
+    restart: unless-stopped
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME: http://localhost:8081
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/buy-right-now.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
+  # Redis (rate limiting of the Gateway)
+  # ---------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ---------------------------------------------------
+  # Zipkin (distributed tracing)
+  # ---------------------------------------------------
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
+  # Apache Pulsar (events)
+  # ---------------------------------------------------
+  pulsar:
+    image: apachepulsar/pulsar:3.3.6
+    container_name: pulsar
+    restart: unless-stopped
+    command: bin/pulsar standalone
+    ports:
+      - "6650:6650"
+      - "8086:8080"
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/admin/v2/brokers/health | grep -q ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  # ---------------------------------------------------
+  # Prometheus (metrics collection)
+  # ---------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
+  # Grafana (dashboards)
+  # ---------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
+  # API Gateway
+  # ---------------------------------------------------
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/buy-right-now
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/certs
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      PRODUCT_SERVICE_URL: http://product-service:8084
+      INVENTORY_SERVICE_URL: http://inventory-service:8085
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+    ports:
+      - "8080:8080"
+    depends_on:
+      - keycloak
+      - redis
+      - product-service
+      - inventory-service
+      - zipkin
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
+  # Frontend
+  # ---------------------------------------------------
+  frontend:
+    build:
+      context: ./front-buy-right-here
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - ecommerce-net
+
+  # ---------------------------------------------------
+  # Business Microservices (template — uncomment and adjust when they exist) 
+  # ---------------------------------------------------
+  #// user-service:
+  #//   build:
+  #//     context: ./user-service
+  #//   container_name: user-service
+  #//   environment:
+  #//     SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/user
+  #//   depends_on:
+  #//     - user-db
+  #//   networks:
+  #//     - ecommerce-net
+  #
+  #// user-db:
+  #//   image: postgres:16
+  #//   environment:
+  #//     POSTGRES_DB: user
+  #//     POSTGRES_USER: user
+  #//     POSTGRES_PASSWORD: user
+  #//   networks:
+  #//     - ecommerce-net
+  #
+  product-db:
+    image: postgres:16
+    container_name: product-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: product
+      POSTGRES_USER: product
+      POSTGRES_PASSWORD: product
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U product"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  inventory-db:
+    image: postgres:16
+    container_name: inventory-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inventory
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: inventory
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  inventory-service:
+    build:
+      context: ./inventory-service
+      dockerfile: Dockerfile
+    container_name: inventory-service
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/buy-right-now
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/certs
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_R2DBC_URL: r2dbc:postgresql://inventory-db:5432/inventory
+      SPRING_R2DBC_USERNAME: inventory
+      SPRING_R2DBC_PASSWORD: inventory
+      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/inventory
+      SPRING_DATASOURCE_USERNAME: inventory
+      SPRING_DATASOURCE_PASSWORD: inventory
+      PULSAR_SERVICE_URL: pulsar://pulsar:6650
+    volumes:
+      - ./inventory-service/logs:/app/logs
+    networks:
+      - ecommerce-net
+    depends_on:
+      inventory-db:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    restart: unless-stopped
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://localhost:8081/realms/buy-right-now
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/certs
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/buy-right-now/protocol/openid-connect/token
+      KEYCLOAK_PRODUCT_SERVICE_CLIENT_ID: product-service
+      KEYCLOAK_PRODUCT_SERVICE_CLIENT_SECRET: ${PRODUCT_SERVICE_CLIENT_SECRET:-product-service-dev-secret}
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATASOURCE_URL: jdbc:postgresql://product-db:5432/product
+      SPRING_DATASOURCE_USERNAME: product
+      SPRING_DATASOURCE_PASSWORD: product
+      INVENTORY_SERVICE_URL: http://inventory-service:8085
+      PULSAR_SERVICE_URL: pulsar://pulsar:6650
+    volumes:
+      - ./product-service/logs:/app/logs
+    networks:
+      - ecommerce-net
+    depends_on:
+      product-db:
+        condition: service_healthy
+      inventory-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+  #
+  # cart-service:
+  #   build:
+  #     context: ./cart-service
+  #   environment:
+  #     SPRING_DATA_REDIS_HOST: redis
+  #   depends_on:
+  #     - redis
+  #   networks:
+  #     - ecommerce-net
