@@ -13,9 +13,14 @@ function SiteHeader({ authenticated, username, onLogin, onLogout }: SiteHeaderPr
         {authenticated ? (
           <>
             <div className="flex items-center gap-2 text-sm font-bold text-base-content">
-              <span className="grid size-9 place-items-center rounded-full bg-primary/15 text-primary">
-                {String(username ?? 'U').slice(0, 1).toUpperCase()}
-              </span>
+              <div className="avatar">
+                <div className="mask mask-squircle w-9">
+                  <img
+                    alt={`Avatar de ${username ?? 'usuario'}`}
+                    src="https://img.daisyui.com/images/profile/demo/distracted1@192.webp"
+                  />
+                </div>
+              </div>
               <span className="hidden sm:inline">{username}</span>
             </div>
             <button className="btn btn-outline btn-sm" onClick={onLogout}>Cerrar sesión</button>
