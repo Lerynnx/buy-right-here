@@ -5,6 +5,7 @@ import Pagination from '../components/Pagination'
 import ProductCard, { ProductCardSkeleton, type Product } from '../components/ProductCard'
 import SiteHeader from '../components/SiteHeader'
 import StorefrontLayout from '../layouts/StorefrontLayout'
+import { getInitialTheme, saveTheme, type Theme } from '../theme'
 
 const keycloak = new Keycloak({
   url: import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8081',
@@ -16,12 +17,18 @@ const apiUrl = import.meta.env.VITE_API_URL ?? '/api'
 const pageSize = 12
 
 function HomePage() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [authenticated, setAuthenticated] = useState(false)
   const [page, setPage] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    saveTheme(theme)
+  }, [theme])
 
   const loadProducts = useCallback(async (requestedPage: number) => {
     setLoading(true)
@@ -91,8 +98,10 @@ function HomePage() {
         username={username}
         onLogin={login}
         onLogout={logout}
+        theme={theme}
+        onThemeChange={setTheme}
       />
-      <HeroBanner />
+      <HeroBanner theme={theme} />
 
       <section className="mx-auto w-full max-w-7xl" aria-labelledby="catalog-title">
         <div className="mb-7 flex items-end justify-between gap-4">
