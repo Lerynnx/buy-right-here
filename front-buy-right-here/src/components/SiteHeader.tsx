@@ -7,19 +7,21 @@ type SiteHeaderProps = {
 
 function SiteHeader({ authenticated, username, onLogin, onLogout }: SiteHeaderProps) {
   return (
-    <header className="site-header">
-      <a className="brand" href="/">buy right here</a>
-      <div className="header-actions">
+    <header className="mx-auto flex w-full max-w-7xl items-center justify-between border-b border-base-300 py-6">
+      <a className="text-xl font-extrabold tracking-tight text-base-content" href="/">buy right here</a>
+      <div className="flex items-center gap-3">
         {authenticated ? (
           <>
-            <div className="user-summary">
-              <span className="user-avatar">{String(username ?? 'U').slice(0, 1).toUpperCase()}</span>
-              <span>{username}</span>
+            <div className="flex items-center gap-2 text-sm font-bold text-base-content">
+              <span className="grid size-9 place-items-center rounded-full bg-primary/15 text-primary">
+                {String(username ?? 'U').slice(0, 1).toUpperCase()}
+              </span>
+              <span className="hidden sm:inline">{username}</span>
             </div>
-            <button className="button button-outline" onClick={onLogout}>Cerrar sesión</button>
+            <button className="btn btn-outline btn-sm" onClick={onLogout}>Cerrar sesión</button>
           </>
         ) : (
-          <button className="button button-primary" onClick={onLogin}>Iniciar sesión</button>
+          <button className="btn btn-primary btn-sm" onClick={onLogin}>Iniciar sesión</button>
         )}
       </div>
     </header>

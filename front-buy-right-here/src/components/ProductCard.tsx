@@ -17,33 +17,35 @@ type ProductCardProps = {
 function getStockStatus(product: Product) {
   const label = product.stockLabel?.toLowerCase()
   if (label === 'sold out' || product.stock === 0) {
-    return { text: 'Agotado', className: 'out-of-stock' }
+    return { text: 'Agotado', className: 'badge-error' }
   }
   if (label === 'last units' || label === 'low stock' || (product.stock !== null && product.stock !== undefined && product.stock <= 10)) {
-    return { text: 'Poco Stock', className: 'low-stock' }
+    return { text: 'Poco Stock', className: 'badge-warning' }
   }
-  return { text: 'Stock', className: 'in-stock' }
+  return { text: 'Stock', className: 'badge-success' }
 }
 
 function ProductCard({ product }: ProductCardProps) {
   const stockStatus = getStockStatus(product)
 
   return (
-    <article className="product-card">
-      <div className="product-image">
+    <article className="card w-full bg-base-100 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+      <figure className="aspect-[1.2] bg-base-200">
         {product.imageUrls?.[0] ? (
-          <img src={product.imageUrls[0]} alt={product.name} />
+          <img className="size-full object-cover" src={product.imageUrls[0]} alt={product.name} />
         ) : (
-          <span>{product.name.slice(0, 1).toUpperCase()}</span>
+          <span className="text-6xl font-extrabold text-primary">{product.name.slice(0, 1).toUpperCase()}</span>
         )}
-      </div>
-      <div className="product-info">
-        {product.brand && <p className="product-brand">{product.brand}</p>}
-        <h3>{product.name}</h3>
-        <p className="product-description">{product.description}</p>
-        <div className="product-footer">
-          <strong>{product.price.toFixed(2)} €</strong>
-          <span className={`stock-badge ${stockStatus.className}`}>
+      </figure>
+      <div className="card-body">
+        <h2 className="card-title">
+          {product.name}
+          {product.brand && <div className="badge badge-outline">{product.brand}</div>}
+        </h2>
+        <p className="min-h-11 text-sm text-base-content/60">{product.description}</p>
+        <div className="card-actions mt-2 items-center justify-between">
+          <strong className="text-lg text-base-content">{product.price.toFixed(2)} €</strong>
+          <span className={`badge ${stockStatus.className}`}>
             {stockStatus.text}
           </span>
         </div>

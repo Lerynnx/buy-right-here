@@ -5,7 +5,6 @@ import Pagination from '../components/Pagination'
 import ProductCard, { type Product } from '../components/ProductCard'
 import SiteHeader from '../components/SiteHeader'
 import StorefrontLayout from '../layouts/StorefrontLayout'
-import '../styles/storefront.css'
 
 const keycloak = new Keycloak({
   url: import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8081',
@@ -95,22 +94,22 @@ function HomePage() {
       />
       <HeroBanner />
 
-      <section className="catalog" aria-labelledby="catalog-title">
-        <div className="section-heading">
+      <section className="mx-auto w-full max-w-7xl" aria-labelledby="catalog-title">
+        <div className="mb-7 flex items-end justify-between gap-4">
           <div>
-            <p className="eyebrow">Catálogo</p>
-            <h2 id="catalog-title">Nuestros productos</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-primary">Catálogo</p>
+            <h2 id="catalog-title" className="mt-1 text-2xl font-medium text-base-content sm:text-3xl">Nuestros productos</h2>
           </div>
-          {!loading && !error && <span className="product-count">{totalCount} productos</span>}
+          {!loading && !error && <span className="text-sm text-base-content/60">{totalCount} productos</span>}
         </div>
 
-        {loading && <p className="status-message">Cargando productos...</p>}
-        {error && <p className="status-message status-error" role="alert">{error}</p>}
+        {loading && <p className="py-10 text-center text-base-content/60">Cargando productos...</p>}
+        {error && <p className="py-10 text-center text-error" role="alert">{error}</p>}
         {!loading && !error && products.length === 0 && (
-          <p className="status-message">No hay productos disponibles ahora mismo.</p>
+          <p className="py-10 text-center text-base-content/60">No hay productos disponibles ahora mismo.</p>
         )}
         {!loading && !error && products.length > 0 && (
-          <div className="product-grid">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => <ProductCard key={product.id} product={product} />)}
           </div>
         )}

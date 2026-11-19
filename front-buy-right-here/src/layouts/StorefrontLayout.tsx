@@ -5,7 +5,7 @@ type StorefrontLayoutProps = {
 }
 
 function StorefrontLayout({ children }: StorefrontLayoutProps) {
-  return <main className="storefront">{children}</main>
+  return <main className="min-h-screen bg-base-200 px-4 pb-16 sm:px-8">{children}</main>
 }
 
 export default StorefrontLayout
