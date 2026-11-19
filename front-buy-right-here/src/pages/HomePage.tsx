@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Keycloak from 'keycloak-js'
 import HeroBanner from '../components/HeroBanner'
 import Pagination from '../components/Pagination'
-import ProductCard, { type Product } from '../components/ProductCard'
+import ProductCard, { ProductCardSkeleton, type Product } from '../components/ProductCard'
 import SiteHeader from '../components/SiteHeader'
 import StorefrontLayout from '../layouts/StorefrontLayout'
 
@@ -103,7 +103,14 @@ function HomePage() {
           {!loading && !error && <span className="text-sm text-base-content/60">{totalCount} productos</span>}
         </div>
 
-        {loading && <p className="py-10 text-center text-base-content/60">Cargando productos...</p>}
+        {loading && (
+          <>
+            <p className="sr-only">Cargando productos...</p>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+              {Array.from({ length: 6 }, (_, index) => <ProductCardSkeleton key={index} />)}
+            </div>
+          </>
+        )}
         {error && <p className="py-10 text-center text-error" role="alert">{error}</p>}
         {!loading && !error && products.length === 0 && (
           <p className="py-10 text-center text-base-content/60">No hay productos disponibles ahora mismo.</p>

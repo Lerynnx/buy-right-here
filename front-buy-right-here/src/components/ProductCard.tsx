@@ -14,6 +14,25 @@ type ProductCardProps = {
   product: Product
 }
 
+export function ProductCardSkeleton() {
+  return (
+    <article className="card w-full bg-base-100 shadow-sm" aria-hidden="true">
+      <figure className="aspect-[1.2] bg-base-200">
+        <div className="skeleton size-full rounded-none" />
+      </figure>
+      <div className="card-body">
+        <div className="skeleton h-6 w-3/4" />
+        <div className="skeleton h-4 w-full" />
+        <div className="skeleton h-4 w-5/6" />
+        <div className="card-actions mt-2 items-center justify-between">
+          <div className="skeleton h-6 w-20" />
+          <div className="skeleton h-6 w-20 rounded-full" />
+        </div>
+      </div>
+    </article>
+  )
+}
+
 function getStockStatus(product: Product) {
   const label = product.stockLabel?.toLowerCase()
   if (label === 'sold out' || product.stock === 0) {
