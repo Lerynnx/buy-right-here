@@ -21,12 +21,12 @@ function SiteHeader({
     <header className="mx-auto flex w-full max-w-7xl items-center justify-between border-b border-base-300 py-6">
       <a className="text-xl font-extrabold tracking-tight text-base-content" href="/">buy right here</a>
       <div className="flex items-center gap-3">
-        <label className="swap swap-rotate" title={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo luminoso'}>
+        <label className="swap swap-rotate" title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
           <input
             type="checkbox"
             checked={theme === 'light'}
             onChange={() => onThemeChange(theme === 'light' ? 'dark' : 'light')}
-            aria-label={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo luminoso'}
+            aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           />
           <svg
             className="swap-on h-8 w-8 fill-current"
@@ -51,17 +51,17 @@ function SiteHeader({
               <div className="avatar">
                 <div className="mask mask-squircle w-9">
                   <img
-                    alt={`Avatar de ${username ?? 'usuario'}`}
+                    alt={`Avatar of ${username ?? 'user'}`}
                     src="https://img.daisyui.com/images/profile/demo/distracted1@192.webp"
                   />
                 </div>
               </div>
               <span className="hidden sm:inline">{username}</span>
             </div>
-            <button className="btn btn-outline btn-sm" onClick={onLogout}>Cerrar sesión</button>
+            <button className="btn btn-outline btn-sm" onClick={onLogout}>Log out</button>
           </>
         ) : (
-          <button className="btn btn-primary btn-sm" onClick={onLogin}>Iniciar sesión</button>
+          <button className="btn btn-primary btn-sm" onClick={onLogin}>Log in</button>
         )}
       </div>
     </header>

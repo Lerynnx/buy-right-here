@@ -7,13 +7,13 @@ type PaginationProps = {
 
 function Pagination({ page, totalPages, onPrevious, onNext }: PaginationProps) {
   return (
-    <nav className="mt-9 flex items-center justify-center gap-3 text-sm text-base-content/60 sm:gap-5" aria-label="Paginación de productos">
+    <nav className="mt-9 flex items-center justify-center gap-3 text-sm text-base-content/60 sm:gap-5" aria-label="Product pagination">
       <button className="btn btn-outline btn-sm" type="button" onClick={onPrevious} disabled={page === 1}>
-        Anterior
+        Previous
       </button>
-      <span>Página {page} de {totalPages}</span>
+      <span>Page {page} of {totalPages}</span>
       <button className="btn btn-outline btn-sm" type="button" onClick={onNext} disabled={page === totalPages}>
-        Siguiente
+        Next
       </button>
     </nav>
   )

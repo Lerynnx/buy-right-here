@@ -46,13 +46,13 @@ function HomePage() {
         return
       }
       if (!response.ok) {
-        throw new Error(`No se pudieron cargar los productos (${response.status})`)
+        throw new Error(`Products could not be loaded (${response.status})`)
       }
       const headerCount = response.headers.get('X-Total-Count')
       setTotalCount(headerCount ? Number(headerCount) : 0)
       setProducts((await response.json()) as Product[])
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Error desconocido')
+      setError(requestError instanceof Error ? requestError.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
@@ -66,7 +66,7 @@ function HomePage() {
         void loadProducts(1)
       })
       .catch(() => {
-        setError('No se pudo inicializar la sesión de Keycloak')
+        setError('The Keycloak session could not be initialized')
         setLoading(false)
       })
   }, [loadProducts])
@@ -106,15 +106,15 @@ function HomePage() {
       <section className="mx-auto w-full max-w-7xl" aria-labelledby="catalog-title">
         <div className="mb-7 flex items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-primary">Catálogo</p>
-            <h2 id="catalog-title" className="mt-1 text-2xl font-medium text-base-content sm:text-3xl">Nuestros productos</h2>
+            <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-primary">Catalog</p>
+            <h2 id="catalog-title" className="mt-1 text-2xl font-medium text-base-content sm:text-3xl">Our products</h2>
           </div>
-          {!loading && !error && <span className="text-sm text-base-content/60">{totalCount} productos</span>}
+          {!loading && !error && <span className="text-sm text-base-content/60">{totalCount} products</span>}
         </div>
 
         {loading && (
           <>
-            <p className="sr-only">Cargando productos...</p>
+            <p className="sr-only">Loading products...</p>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3" aria-busy="true">
               {Array.from({ length: 6 }, (_, index) => <ProductCardSkeleton key={index} />)}
             </div>
@@ -122,7 +122,7 @@ function HomePage() {
         )}
         {error && <p className="py-10 text-center text-error" role="alert">{error}</p>}
         {!loading && !error && products.length === 0 && (
-          <p className="py-10 text-center text-base-content/60">No hay productos disponibles ahora mismo.</p>
+          <p className="py-10 text-center text-base-content/60">No products are available right now.</p>
         )}
         {!loading && !error && products.length > 0 && (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

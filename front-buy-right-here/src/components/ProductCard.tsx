@@ -36,10 +36,10 @@ export function ProductCardSkeleton() {
 function getStockStatus(product: Product) {
   const label = product.stockLabel?.toLowerCase()
   if (label === 'sold out' || product.stock === 0) {
-    return { text: 'Agotado', className: 'badge-error' }
+    return { text: 'Sold out', className: 'badge-error' }
   }
   if (label === 'last units' || label === 'low stock' || (product.stock !== null && product.stock !== undefined && product.stock <= 10)) {
-    return { text: 'Poco Stock', className: 'badge-warning' }
+    return { text: 'Low stock', className: 'badge-warning' }
   }
   return { text: 'Stock', className: 'badge-success' }
 }
