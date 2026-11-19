@@ -1,4 +1,6 @@
 import type { Theme } from '../theme'
+import logoDark from '../assets/logoDark.webp'
+import logoLight from '../assets/logoLight.webp'
 
 type SiteHeaderProps = {
   authenticated: boolean
@@ -18,9 +20,15 @@ function SiteHeader({
   onThemeChange,
 }: SiteHeaderProps) {
   return (
-    <header className="mx-auto flex w-full max-w-7xl items-center justify-between border-b border-base-300 py-6">
-      <a className="text-xl font-extrabold tracking-tight text-base-content" href="/">buy right here</a>
-      <div className="flex items-center gap-3">
+    <header className="mx-auto flex w-full max-w-7xl items-center justify-between border-b border-base-300 py-3">
+      <a className="flex items-center" href="/" aria-label="Buy Right Here home">
+        <img className="h-14 w-20 object-contain mix-blend-multiply dark:mix-blend-screen" src={theme === 'dark' ? logoDark : logoLight} alt="Buy Right Here" />
+      </a>
+      <div className="flex items-center gap-5">
+        <nav className="hidden items-center gap-6 text-sm font-bold sm:flex" aria-label="Main navigation">
+          <a className="text-base-content/70 transition-colors hover:text-primary" href="/">Home</a>
+          <a className="text-base-content/70 transition-colors hover:text-primary" href="/products">Products</a>
+        </nav>
         <label className="swap swap-rotate" title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
           <input
             type="checkbox"

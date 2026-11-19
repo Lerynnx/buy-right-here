@@ -3,13 +3,14 @@ import SiteFooter from '../components/SiteFooter'
 
 type StorefrontLayoutProps = {
   children: ReactNode
+  showFooter?: boolean
 }
 
-function StorefrontLayout({ children }: StorefrontLayoutProps) {
+function StorefrontLayout({ children, showFooter = true }: StorefrontLayoutProps) {
   return (
     <main className="min-h-screen bg-base-200 px-4 pb-16 sm:px-8">
       {children}
-      <SiteFooter />
+      {showFooter && <SiteFooter />}
     </main>
   )
 }
