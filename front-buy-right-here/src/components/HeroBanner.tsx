@@ -8,18 +8,19 @@ type HeroBannerProps = {
 
 function HeroBanner({ theme }: HeroBannerProps) {
   return (
-    <section className="hero relative isolate mx-auto my-7 min-h-64 w-full max-w-7xl overflow-hidden rounded-box bg-neutral text-neutral-content sm:my-10 sm:min-h-72">
+    <section className="hero relative isolate mx-auto my-5 min-h-[calc(100vh-6.5rem)] w-full max-w-7xl overflow-hidden rounded-box bg-neutral text-neutral-content sm:my-7">
       <img
         className="absolute inset-0 -z-20 size-full object-cover object-center"
         src={theme === 'dark' ? heroDark : heroLight}
         alt=""
       />
-      <div className="hero-overlay bg-gradient-to-r from-neutral via-neutral/85 to-neutral/20" />
-      <div className="hero-content w-full justify-start px-7 py-10 text-left sm:px-12">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.15em] text-primary">Shop smarter</p>
-          <h1 className="my-2 max-w-3xl text-4xl font-medium tracking-tight text-white sm:text-6xl">Products picked for you.</h1>
-          <p className="max-w-lg text-base text-neutral-content/80">Discover a simple, curated selection ready to arrive at your door.</p>
+      <div className="hero-overlay bg-gradient-to-r from-neutral/95 via-neutral/55 to-transparent" />
+      <div className="hero-content w-full justify-start px-7 py-10 text-left sm:px-16">
+        <div className="max-w-xl">
+          <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-primary">Buy better. Live better.</p>
+          <h1 className="my-4 text-5xl font-medium leading-[0.95] tracking-tight text-white sm:text-7xl">Everything you want, right here.</h1>
+          <p className="max-w-lg text-lg text-neutral-content/80">Thoughtfully selected essentials, made easy to discover and even easier to love.</p>
+          <a className="btn btn-primary mt-8 px-8" href="/products">Explore products</a>
         </div>
       </div>
     </section>
