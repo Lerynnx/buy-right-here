@@ -18,7 +18,7 @@ function HeroBanner({ theme }: HeroBannerProps) {
       <div className="hero-content w-full justify-start px-7 py-10 text-left sm:px-16">
         <div className="max-w-xl">
           <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-primary">Buy better. Live better.</p>
-          <h1 className="my-4 text-5xl font-medium leading-[0.95] tracking-tight text-white sm:text-7xl">Everything you want, right here.</h1>
+          <h1 className="my-4 text-5xl font-medium leading-[0.95] tracking-tight text-white sm:text-7xl">Everything you want, Buy Right Here.</h1>
           <p className="max-w-lg text-lg text-neutral-content/80">Thoughtfully selected essentials, made easy to discover and even easier to love.</p>
           <a className="btn btn-primary mt-8 px-8" href="/products">Explore products</a>
         </div>

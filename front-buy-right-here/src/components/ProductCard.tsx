@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import productPlaceholder from '../assets/productPlaceholder.webp'
+
 export type Product = {
   id: number
   name: string
@@ -46,15 +49,19 @@ function getStockStatus(product: Product) {
 
 function ProductCard({ product }: ProductCardProps) {
   const stockStatus = getStockStatus(product)
+  const imageUrl = product.imageUrls?.[0]
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
+  const imageSource = imageUrl && failedImageUrl !== imageUrl ? imageUrl : productPlaceholder
 
   return (
     <article className="card w-full bg-base-100 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
       <figure className="aspect-[1.2] bg-base-200">
-        {product.imageUrls?.[0] ? (
-          <img className="size-full object-cover" src={product.imageUrls[0]} alt={product.name} />
-        ) : (
-          <span className="text-6xl font-extrabold text-primary">{product.name.slice(0, 1).toUpperCase()}</span>
-        )}
+        <img
+          className="size-full object-cover"
+          src={imageSource}
+          alt={product.name}
+          onError={() => setFailedImageUrl(imageUrl ?? '')}
+        />
       </figure>
       <div className="card-body">
         <h2 className="card-title">
