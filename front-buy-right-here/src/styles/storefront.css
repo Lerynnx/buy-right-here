@@ -53,7 +53,7 @@
   overflow: hidden;
   background:
     linear-gradient(90deg, rgba(23, 21, 29, .96) 0%, rgba(23, 21, 29, .82) 48%, rgba(23, 21, 29, .2) 100%),
-    url('/heroDark.webp') center 42% / cover;
+    url('../assets/heroDark.webp') center 42% / cover;
   border-radius: 22px;
   color: white;
   margin: 42px 0 70px;
